@@ -9,13 +9,16 @@ import {
     GET_ALL_TRANSACTION_SUCCESS, 
     UPDATE_TRANSACTION_REQUEST, 
     UPDATE_TRANSACTION_FAILURE, 
-    UPDATE_TRANSACTION_SUCCESS 
+    UPDATE_TRANSACTION_SUCCESS, 
+    GET_ALL_TRANSACTION_HISTORY_SUCCESS,
+    GET_ALL_TRANSACTION_HISTORY_REQUEST,
+    GET_ALL_TRANSACTION_HISTORY_FAILURE
 } from "./ActionType";
 
 export const addTransaction = (transactionData) => async (dispatch) => {
     const token = localStorage.getItem("token"); 
     try {
-        dispatch({ type: CREATE_TRANSACTION_re });
+        dispatch({ type: CREATE_TRANSACTION_REQUEST});
 
         const response = await axios.post(`${API_BASE_URL}/transaction/add`, transactionData, {
             headers: {
@@ -90,5 +93,33 @@ export const getAllTransaction = (type) => async (dispatch) => {
     } catch (error) {
         console.error('Error fetching books:', error.response ? error.response.data : error.message);
         dispatch({ type: GET_ALL_TRANSACTION_FAILURE, payload: error.message });
+    }
+};
+
+
+export const getTransactionHistories = (type) => async (dispatch) => {
+    const token = localStorage.getItem("token");
+    try {
+        dispatch({ type: GET_ALL_TRANSACTION_HISTORY_REQUEST });
+
+        const { data } = await axios.get(`${API_BASE_URL}/transaction/history`, {
+            params: { type },
+            headers: {
+                "Authorization": `Bearer ${token}`
+            },
+            
+        });
+
+        console.log("Ls nhạp ", data)
+
+
+        dispatch({
+            type: GET_ALL_TRANSACTION_HISTORY_SUCCESS,
+            payload: data,
+        });
+
+    } catch (error) {
+        console.error('Error fetching books:', error.response ? error.response.data : error.message);
+        dispatch({ type: GET_ALL_TRANSACTION_HISTORY_FAILURE, payload: error.message });
     }
 };

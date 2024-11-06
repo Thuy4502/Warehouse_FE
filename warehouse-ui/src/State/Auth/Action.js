@@ -43,7 +43,6 @@ export const getUser = (token) => async (dispatch) => {
         const user = response.data;
         localStorage.setItem("staffId", user.data.staffId)
         localStorage.setItem("role", user.data.account.role.roleName);
-
         dispatch(getUserSuccess(user));
     } catch (error) {
         console.error("Error fetching user profile:", error.response ? error.response.data : error.message);

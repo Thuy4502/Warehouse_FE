@@ -1,10 +1,53 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { useDispatch, useSelector } from 'react-redux';
+import { getTransactionHistories } from '../State/Transaction/Action';
+import { LuDownload } from "react-icons/lu";
+import * as XLSX from 'xlsx';
 
 const ImportReport = () => {
+    const dispatch = useDispatch();
+    const transactionHistories = useSelector((state) => state.transaction?.transactionHistory.data || []);
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
+    const type = "Nhập";
+
+    useEffect(() => {
+        dispatch(getTransactionHistories(type));
+    }, [dispatch, type]);
+
+    const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+
+    const filteredTransactions = transactionHistories.filter(transaction => {
+        const transactionDate = new Date(transaction.createDate);
+        return (!startDate || transactionDate >= startDate) &&
+            (!endDate || transactionDate <= endDate);
+    });
+
+    const handleOnclickExport = () => {
+        const worksheetData = filteredTransactions.map((transaction, index) => ({
+            STT: index + 1,
+            NgayNhap: transaction.createDate || "N/A",
+            MaPN: transaction.transactionCode || "N/A",
+            MaSach: transaction.bookId || "N/A",
+            TenSach: transaction.bookName || "N/A",
+            DonVi: "quyển",
+            DonGia: formatCurrency(transaction.price),
+            TonDauKy_SoLuong: transaction.startQty || 0,
+            TonDauKy_ThanhTien: formatCurrency((transaction.startQty || 0) * (transaction.price || 0)),
+            NhapTrongKy_SoLuong: transaction.actualQuantity || 0,
+            NhapTrongKy_ThanhTien: formatCurrency((transaction.actualQuantity || 0) * (transaction.price || 0)),
+            TonCuoiKy_SoLuong: transaction.startQty + transaction.actualQuantity || 0,
+            TonCuoiKy_ThanhTien: formatCurrency(((transaction.startQty + transaction.actualQuantity) || 0) * (transaction.price || 0))
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "ImportHistory");
+
+        XLSX.writeFile(workbook, "ImportHistory.xlsx");
+    };
 
     return (
         <div className="bg-white m-3">
@@ -48,40 +91,59 @@ const ImportReport = () => {
                         />
                     </div>
                 </div>
+                <button className='ml-auto rounded-md border p-2 flex items-center bg-green-700 text-white' onClick={() => handleOnclickExport()}>
+                    <LuDownload className="mr-2" />Export excel
+                </button>
             </div>
+
 
             <div className="overflow-x-auto">
                 <table className="min-w-full table-auto border-collapse border border-gray-300">
                     <thead className="bg-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide">
-                        <tr>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Mã PN</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Mã sách</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Tên sách</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Ngày nhập</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Đơn vị</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Tồn đầu kỳ</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Nhập trong kỳ</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Tồn cuối kỳ</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Đơn giá</th>
+                        <tr className='bg-blue-200'>
+                            <th className="border border-gray-300 px-4 py-2 text-center" rowSpan="2">STT</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" rowSpan="2">Ngày nhập</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" rowSpan="2">Mã PN</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" rowSpan="2">Mã sách</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" rowSpan="2">Tên sách</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" rowSpan="2">Đơn vị</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" rowSpan="2">Đơn giá</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" colSpan="2">Tồn đầu kỳ</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" colSpan="2">Nhập trong kỳ</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center" colSpan="2">Tồn cuối kỳ</th>
+                        </tr>
+                        <tr className='bg-blue-200'>
+                            <th className="border border-gray-300 px-4 py-2 text-center">Số lượng</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center">Thành tiền</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center">Số lượng</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center">Thành tiền</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center">Số lượng</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center">Thành tiền</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr className="text-sm">
-                            <td className="border border-gray-300 px-4 py-2 text-center">PN01</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">1234</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">Item Name</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">kg</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">100</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">50</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">20</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">130</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">10,000</td>
-                        </tr>
+                        {filteredTransactions.map((transaction, index) => (
+                            <tr key={transaction.id} className="text-sm">
+                                <td className="border border-gray-300 px-4 py-2 text-center">{index + 1}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{transaction.createDate || "N/A"}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{transaction.transactionCode || "N/A"}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{transaction.bookId || "N/A"}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{transaction.bookName || "N/A"}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">quyển</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{formatCurrency(transaction.price)}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{transaction.startQty || 0}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{formatCurrency((transaction.startQty || 0) * (transaction.price || 0))}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{transaction.actualQuantity || 0}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{formatCurrency((transaction.actualQuantity || 0) * (transaction.price || 0))}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{transaction.startQty + transaction.actualQuantity || 0}</td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">{formatCurrency(((transaction.startQty + transaction.actualQuantity) || 0) * (transaction.price || 0))}</td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
         </div>
     );
-}
+};
 
 export default ImportReport;

@@ -7,10 +7,11 @@ import { getAllPublisher } from '../State/Publisher/Action';
 import { Checkbox, FormControl, MenuItem, Select } from '@mui/material';
 import { uploadImageToFirebase } from '../config/FirebaseConfig';
 import { addBook } from '../State/Book/Action';
+import UploadExcelFile from './UploadExcelFile';
 
 const AddBook = ({ closeModal }) => {
     const defaultImage = 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg';
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(defaultImage);
     const [loading, setLoading] = useState(false);
@@ -52,7 +53,7 @@ const AddBook = ({ closeModal }) => {
     const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
-            setSelectedFile(file); 
+            setSelectedFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setBookData((prevData) => ({ ...prevData, image: reader.result }));
@@ -60,7 +61,7 @@ const AddBook = ({ closeModal }) => {
             reader.readAsDataURL(file);
         }
     };
-    
+
 
     const handleAuthorChange = (event) => {
         const value = event.target.value;
@@ -91,7 +92,7 @@ const AddBook = ({ closeModal }) => {
         try {
             let imageUrl = '';
             console.log("SelectedF File", selectedFile);
-            
+
             if (selectedFile) {
                 imageUrl = await uploadImageToFirebase(selectedFile);
                 console.log("Uploaded image URL:", imageUrl);
@@ -102,7 +103,7 @@ const AddBook = ({ closeModal }) => {
 
             dispatch(addBook(bookData));
             closeModal
-           
+
         } catch (error) {
             console.error("Error creating product:", error);
             setError('Error creating product. Please try again.');
@@ -110,6 +111,11 @@ const AddBook = ({ closeModal }) => {
             setLoading(false);
         }
     };
+
+    const closeModalUpload = () => {
+        setIsUploadModalOpen(false);
+    };
+
 
     console.log("Thông tin sách ", bookData)
 
@@ -144,7 +150,8 @@ const AddBook = ({ closeModal }) => {
                                 <span className="sr-only">Close modal</span>
                             </button>
                         </div>
-                        <div className="p-6 space-y-6">
+                        <div className="p-6 space-y-6 bo">
+
                             <div className="grid grid-cols-6 gap-6">
                                 <div className='col-span-12 flex justify-center sm:col-span-6'>
                                     <img
@@ -165,7 +172,7 @@ const AddBook = ({ closeModal }) => {
                                         name="bookName"
                                         id="bookName"
                                         className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                        value={bookData.bookName} 
+                                        value={bookData.bookName}
                                         onChange={handleInputChange}
                                         placeholder=""
                                         required
@@ -341,9 +348,9 @@ const AddBook = ({ closeModal }) => {
                                     <textarea
                                         name="title"
                                         id="title"
-                                        rows="4" 
+                                        rows="4"
                                         className="shadow-sm w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                        value={bookData.title} 
+                                        value={bookData.title}
                                         onChange={handleInputChange}
                                         placeholder=""
                                         required
@@ -368,6 +375,7 @@ const AddBook = ({ closeModal }) => {
                 </div>
             </div>
         </div>
+
 
     )
 }

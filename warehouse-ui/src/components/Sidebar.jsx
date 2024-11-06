@@ -63,7 +63,7 @@ const Sidebar = () => {
     },
     { id: 7, path: "/suppliers", name: "Nhà cung cấp", icon: BiPurchaseTagAlt },
     { id: 8, path: "/staffs", name: "Nhân viên", icon: TbUsers },
-    { id: 9, path: "/uploadImage", name: "Upload Image", icon: TbUsers },
+    // { id: 9, path: "/uploadImage", name: "Upload Image", icon: TbUsers },
 
 
 

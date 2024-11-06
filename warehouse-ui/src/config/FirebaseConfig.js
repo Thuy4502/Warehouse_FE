@@ -11,11 +11,9 @@ const firebaseConfig = {
   measurementId: "G-E4VWB3C577"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const storage = getStorage(app);
 
-// Function to upload image to Firebase and get the URL
 export const uploadImageToFirebase = async (file) => {
   if (!file) {
     console.error("No file provided for upload.");
@@ -31,5 +29,36 @@ export const uploadImageToFirebase = async (file) => {
   } catch (error) {
     console.error("Error uploading file:", error);
     return null;
+  }
+};
+
+
+export const uploadImageToFirebaseExcel = async (imageBuffer, imageExtension) => {
+  const imageName = `books/${Date.now()}.${imageExtension}`;
+  const imageRef = ref(storage, imageName);
+  const blob = new Blob([imageBuffer], { type: `image/${imageExtension}` });
+
+  try {
+    await uploadBytes(imageRef, blob);
+    const imageUrl = await getDownloadURL(imageRef);
+    return imageUrl;
+  } catch (error) {
+    console.error("Error uploading image to Firebase:", error);
+    throw error; 
+  }
+};
+
+export const uploadStaffImageToFirebaseExcel = async (imageBuffer, imageExtension) => {
+  const imageName = `staffs/${Date.now()}.${imageExtension}`;
+  const imageRef = ref(storage, imageName);
+  const blob = new Blob([imageBuffer], { type: `image/${imageExtension}` });
+
+  try {
+    await uploadBytes(imageRef, blob);
+    const imageUrl = await getDownloadURL(imageRef);
+    return imageUrl;
+  } catch (error) {
+    console.error("Error uploading image to Firebase:", error);
+    throw error; 
   }
 };

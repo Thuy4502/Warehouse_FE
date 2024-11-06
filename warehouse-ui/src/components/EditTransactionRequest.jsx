@@ -26,6 +26,11 @@ const EditTransactionRequest = ({ isOpen, onClose, transactionRequest }) => {
         totalValue: 0,
     });
 
+    const handleSave = (event) => {
+        event.preventDefault();
+        dispatch(updateTransactionRequest(transactionRequest.transactionRequestId, data));
+    };
+
     console.log("Dữ liệu để cập nhật ", data)
 
 
@@ -36,35 +41,32 @@ const EditTransactionRequest = ({ isOpen, onClose, transactionRequest }) => {
 
     useEffect(() => {
         if (transactionRequest) {
-            setData({
-                createBy: transactionRequest.createBy || '',
-                phoneNumber: transactionRequest.phoneNumber || '',
-                position: transactionRequest.position || '',
-                department: transactionRequest.department || '',
-                reason: transactionRequest.reason || '',
-                transactionRequestItems: transactionRequest.transactionRequestItems || [],
-                staffId: transactionRequest.staff.staffId || '',
-                updateBy: staffId,
-                totalValue: transactionRequest.totalValue || 0,
-            });
-    
             const formattedRows = (transactionRequest.transactionRequestItems || []).map((item, index) => ({
                 id: index + 1,
-                bookId: item.book ? item.book.bookId : '', 
+                bookId: item.book?.bookId || '', 
                 quantity: item.quantity || '',
                 price: item.price || '',
                 note: item.note || '',
             }));
     
             setRows(formattedRows);
+    
+            setData({
+                createBy: transactionRequest.createBy || '',
+                phoneNumber: transactionRequest.phoneNumber || '',
+                position: transactionRequest.position || '',
+                department: transactionRequest.department || '',
+                reason: transactionRequest.reason || '',
+                transactionRequestItems: formattedRows || [],  // Use formattedRows directly
+                staffId: transactionRequest.staff?.staffId || '',
+                updateBy: staffId,
+                totalValue: transactionRequest.totalValue || 0,
+            });
         }
     }, [transactionRequest, staffId]);
     
+    
 
-    const handleSave = (event) => {
-        event.preventDefault();
-        dispatch(updateTransactionRequest(transactionRequest.transactionRequestId, data));
-    };
 
     useEffect(() => {
         dispatch(getAllBooks());
@@ -223,13 +225,13 @@ const EditTransactionRequest = ({ isOpen, onClose, transactionRequest }) => {
                                             <td className="px-6 py-4 border border-gray-300">{index + 1}</td>
                                             <td className="px-6 py-4 border border-gray-300">
                                                 <Select
-                                                    value={row.book?.bookId || ''}
+                                                    value={row.bookId || ''} 
                                                     onChange={(e) => handleRowChange(index, 'bookId', e.target.value)}
                                                     displayEmpty
                                                     className="w-full"
                                                 >
-                                                    <MenuItem value="" disabled>
-                                                        Chọn sách
+                                                    <MenuItem value={row?.book?.bookId} disabled>
+                                                     
                                                     </MenuItem>
                                                     {books.map((book) => (
                                                         <MenuItem key={book.bookId} value={book.bookId}>

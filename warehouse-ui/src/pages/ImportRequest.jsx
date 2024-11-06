@@ -78,6 +78,7 @@ const AddImportRequestModal = ({ isOpen, onClose }) => {
         setData({ ...data, [field]: value });
     };
 
+
     return (
         <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
             <div
@@ -292,6 +293,9 @@ const ImportRequest = () => {
     const transactionRequests = useSelector((state) => state.transactionRequest.transactionRequests.data || []);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedTransactionRequest, setSelectedTransactionRequest] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+
 
     console.log("Dữ liệu truyền đi  ", selectedTransactionRequest)
 
@@ -305,6 +309,28 @@ const ImportRequest = () => {
     useEffect(() => {
         dispatch(getAllTransactionRequest(type));
     }, [dispatch]);
+
+    
+    const filteredTransactionsRequest = transactionRequests.filter(transactionRequest => {
+        const transactionRequestId = String(transactionRequest?.transactionRequestId || '').toLowerCase();
+        const transactionDate = new Date(transactionRequest.createAt);
+        const createBy = transactionRequest.createBy.toLowerCase() || ''; 
+        const status = transactionRequest.status.toLowerCase() || ''; 
+        const updatedBy = transactionRequest?.staff.staffName.toLowerCase() || ''; 
+
+    
+        return (
+            (!startDate || transactionDate >= startDate) &&
+            (!endDate || transactionDate <= endDate) &&
+            (!searchTerm ||
+                createBy.includes(searchTerm.toLowerCase()) || 
+                status.includes(searchTerm.toLowerCase()) ||
+                transactionRequestId.includes(searchTerm.toLowerCase()) ||
+                updatedBy.includes(searchTerm.toLowerCase())
+
+            )
+        );
+    });
 
     return (
         <div>
@@ -375,7 +401,8 @@ const ImportRequest = () => {
                                 type="text"
                                 id="table-search-users"
                                 className="block pt-2.5 pb-2.5 items-center ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                placeholder="Tìm kiếm thể loại sách"
+                                placeholder="Tìm kiếm phiếu yêu cầu nhập"
+                                onChange={(e) => setSearchTerm(e.target.value)} 
                             />
                         </div>
                         <div className="ml-2">
@@ -419,7 +446,7 @@ const ImportRequest = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {transactionRequests.map((request, index) => (
+                            {filteredTransactionsRequest.map((request, index) => (
                                 <tr
                                     key={request.id}
                                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
@@ -433,7 +460,7 @@ const ImportRequest = () => {
                                     <td className="px-6 py-4">{request.transactionRequestId}</td>
                                     <td className="px-6 py-4">{request.totalValue}</td>
                                     <td className="px-6 py-4">{request.status}</td>
-                                    <td className="px-6 py-4">{request.createdAt}</td>
+                                    <td className="px-6 py-4">{request.createAt}</td>
                                     <td className="px-6 py-4">{request.createBy}</td>
                                     <td className="px-6 py-4">{request.staff.staffName}</td>
                                     <td className="px-6 py-4">

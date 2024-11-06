@@ -10,7 +10,10 @@ import {
   FIND_BOOK_BY_ID_FAILURE,
   UPDATE_BOOK_REQUEST,        
   UPDATE_BOOK_SUCCESS,        
-  UPDATE_BOOK_FAILURE,        
+  UPDATE_BOOK_FAILURE,  
+  ADD_BOOKS_BY_EXCEL_REQUEST,
+  ADD_BOOKS_BY_EXCEL_SUCCESS,
+  ADD_BOOKS_BY_EXCEL_FAILURE
 } from './ActionType';
 
 const initialState = {
@@ -26,6 +29,7 @@ export const bookReducer = (state = initialState, action) => {
     case GET_ALL_BOOK_REQUEST:
     case FIND_BOOK_BY_ID_REQUEST:
     case UPDATE_BOOK_REQUEST:
+    case ADD_BOOKS_BY_EXCEL_REQUEST: 
       return {
         ...state,
         loading: true,
@@ -56,11 +60,18 @@ export const bookReducer = (state = initialState, action) => {
         loading: false,
         book: action.payload,
       };
+    case ADD_BOOKS_BY_EXCEL_SUCCESS: 
+      return {
+        ...state,
+        loading: false,
+        books: action.payload, 
+      };
 
     case ADD_BOOK_FAILURE:
     case GET_ALL_BOOK_FAILURE:
     case FIND_BOOK_BY_ID_FAILURE:
-    case UPDATE_BOOK_FAILURE: 
+    case UPDATE_BOOK_FAILURE:
+    case ADD_BOOKS_BY_EXCEL_FAILURE: 
       return {
         ...state,
         loading: false,

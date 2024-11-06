@@ -15,14 +15,13 @@ import Report from '../pages/Report';
 import Supplier from '../pages/Supplier';
 import UserProfileCard from '../pages/UserProfile';
 import FirebaseImageUpload from '../components/FirebaseImageUpload';
+import Staff from '../pages/Staff';
 
 const AppRoutes = () => {
-  const token = localStorage.getItem('token'); // Lấy token từ localStorage để kiểm tra trạng thái đăng nhập
-
+  const token = localStorage.getItem('token'); 
   return (
     <div>
       <Routes>
-        {/* Nếu người dùng chưa đăng nhập, điều hướng đến trang /login */}
         <Route
           path='/'
           element={token ? <Layout /> : <Navigate to='/login' replace />}
@@ -40,10 +39,11 @@ const AppRoutes = () => {
           <Route path='suppliers' element={<Supplier />} />
           <Route path='profile' element={<UserProfileCard />} />
           <Route path='uploadImage' element={<FirebaseImageUpload />} />
+          <Route path='staffs' element={<Staff/>} />
+          
 
         </Route>
         <Route path='login' element={<Login />} />
-        {/* Nếu truy cập một đường dẫn không hợp lệ thì cũng điều hướng đến /login */}
         <Route path='*' element={<Navigate to='/login' replace />} />
       </Routes>
     </div>

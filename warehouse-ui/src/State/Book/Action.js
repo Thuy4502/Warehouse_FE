@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ADD_BOOK_FAILURE, ADD_BOOK_REQUEST, ADD_BOOK_SUCCESS, FIND_BOOK_BY_ID_FAILURE, FIND_BOOK_BY_ID_REQUEST, FIND_BOOK_BY_ID_SUCCESS, GET_ALL_BOOK_REQUEST, GET_ALL_BOOK_SUCCESS, UPDATE_BOOK_FAILURE, UPDATE_BOOK_REQUEST, UPDATE_BOOK_SUCCESS } from "./ActionType"
+import { ADD_BOOK_FAILURE, ADD_BOOK_REQUEST, ADD_BOOK_SUCCESS, ADD_BOOKS_BY_EXCEL_FAILURE, ADD_BOOKS_BY_EXCEL_REQUEST, ADD_BOOKS_BY_EXCEL_SUCCESS, FIND_BOOK_BY_ID_FAILURE, FIND_BOOK_BY_ID_REQUEST, FIND_BOOK_BY_ID_SUCCESS, GET_ALL_BOOK_REQUEST, GET_ALL_BOOK_SUCCESS, UPDATE_BOOK_FAILURE, UPDATE_BOOK_REQUEST, UPDATE_BOOK_SUCCESS } from "./ActionType"
 import { API_BASE_URL } from '../../config/apiConfig';
 import { GET_ALL_AUTHOR_FAILURE } from "../Author/ActionType";
 
@@ -24,6 +24,29 @@ export const addBook = (bookData) => async (dispatch) => {
     } catch (error) {
         console.error('Error creating product:', error.response ? error.response.data : error.message);
         dispatch({ type: ADD_BOOK_FAILURE, payload: error.message });
+    }
+}
+
+export const addBookByExcel = (bookData) => async (dispatch) => {
+    const token = localStorage.getItem("token");
+    try {
+        dispatch({type: ADD_BOOKS_BY_EXCEL_REQUEST});
+        const {data} = await axios.post(`${API_BASE_URL}/book/addByExcel`, bookData, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        console.log("Created product ", data);
+
+        dispatch({
+            type: ADD_BOOKS_BY_EXCEL_SUCCESS,
+            payload: data,
+        });
+
+    } catch (error) {
+        console.error('Error creating product:', error.response ? error.response.data : error.message);
+        dispatch({ type: ADD_BOOKS_BY_EXCEL_FAILURE, payload: error.message });
     }
 }
 
@@ -82,7 +105,6 @@ export const updateBook = (id, bookData) => async (dispatch) => {
         
         dispatch({ type: UPDATE_BOOK_FAILURE, payload: error.message });
     }
-    
 }
 
 export const getAllBooks = () => async (dispatch) => {
@@ -93,8 +115,7 @@ export const getAllBooks = () => async (dispatch) => {
         const { data } = await axios.get(`${API_BASE_URL}/book/getAll`, {
             headers: {
                 "Authorization": `Bearer ${token}`
-            },
-            
+            }, 
         });
 
         dispatch({

@@ -7,6 +7,7 @@ import publisherReducer from "./Publisher/Reducer";
 import { bookReducer } from "./Book/Reducer";
 import transactionRequestReducer from "./TransactionRequest/Reducer";
 import transactionReducer from "./Transaction/Reducer";
+import { staffReducer } from "./Staff/Reducer";
 
 const rootReducers = combineReducers({
     auth: authReducer,
@@ -16,6 +17,7 @@ const rootReducers = combineReducers({
     book: bookReducer,
     transactionRequest: transactionRequestReducer,
     transaction: transactionReducer,
+    staff: staffReducer,
 });
 
 

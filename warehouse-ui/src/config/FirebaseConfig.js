@@ -32,6 +32,24 @@ export const uploadImageToFirebase = async (file) => {
   }
 };
 
+export const uploadStaffImageToFirebase = async (file) => {
+  if (!file) {
+    console.error("No file provided for upload.");
+    return null;
+  }
+
+  const storageRef = ref(storage, `staffs/${file.name}`);
+  
+  try {
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    return url;
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    return null;
+  }
+};
+
 
 export const uploadImageToFirebaseExcel = async (imageBuffer, imageExtension) => {
   const imageName = `books/${Date.now()}.${imageExtension}`;

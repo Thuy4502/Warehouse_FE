@@ -8,7 +8,7 @@ export const getAllPublisher = () => async (dispatch) => {
     try {
         dispatch({ type: GET_ALL_PUBLISHER_REQUEST });
 
-        const { data } = await axios.get(`${API_BASE_URL}/publisher/getAll`, {
+        const { data } = await axios.get(`${API_BASE_URL}/api/publisher/getAll`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }

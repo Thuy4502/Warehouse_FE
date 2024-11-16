@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { LuPlus, LuUpload, LuDownload} from "react-icons/lu";
+import { LuPlus, LuUpload, LuDownload, LuSearch} from "react-icons/lu";
 import AddBook from '../components/AddBook';
 import EditBook from '../components/EditBook';
 import { getAllBooks, updateBook } from '../State/Book/Action';
 import { useDispatch, useSelector } from 'react-redux';
 import UploadExcelFile from '../components/UploadExcelFile';
 import CommonUtils from '../utils/CommonUtils';
+import { getAllCategories } from '../State/Category/Action';
 
 const Books = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,8 +15,26 @@ const Books = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [statusToUpdate, setStatusToUpdate] = useState('');
-
+  const userRole = localStorage.getItem("role");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const { books } = useSelector((state) => state.book);
+  const { categories } = useSelector((state) => state.category);
+
+
+  const handleCategoryChange = (event) => {
+    setSelectedCategory(event.target.value);
+  };
+
+  const filteredBooks = books.data
+    ? books.data.filter((book) =>
+      book.bookName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (selectedCategory ? book.category.categoryId === Number(selectedCategory) : true)
+
+    )
+    : [];
+
+
   const dispatch = useDispatch();
 
   const [bookData, setBookData] = useState({
@@ -28,6 +47,7 @@ const Books = () => {
 
   useEffect(() => {
     dispatch(getAllBooks());
+    dispatch(getAllCategories())
   }, [dispatch]);
 
   const openAddModal = () => {
@@ -93,60 +113,67 @@ const Books = () => {
 
   let handleOnclickExport = async () => {
     console.log("Dữ liệu để xuất ", books.data)
-    if(books) {
+    if (books) {
       await CommonUtils.exportExcel(books.data, "Danh sách sách", "BookList")
     }
   }
+
+  console.log("Danh sách thể loại ", categories.data)
+
 
   return (
     <div className="relative m-3 overflow-x-auto shadow-md sm:rounded-lg">
       <div className="flex items-center justify-between flex-column md:flex-row flex-wrap space-y-4 md:space-y-0 py-4 bg-white dark:bg-gray-900">
         <div>
-          <button
-            id="dropdownActionButton"
-            className="inline-flex items-center ml-5 text-gray-500 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
-            type="button"
+          <select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="border border-gray-300 rounded-md p-2 ml-3"
           >
-            Thể loại
-            <svg
-              className="w-2.5 h-2.5 ms-2.5"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 10 6"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="m1 1 4 4 4-4"
-              />
-            </svg>
-          </button>
+            <option value="">Thể loại</option>
+            {categories.data &&
+              categories.data.map((category) => (
+                <option key={category.categoryId} value={category.categoryId}>
+                  {category.categoryName}
+                </option>
+              ))}
+          </select>
         </div>
         <div className="flex items-center mr-5">
           <label htmlFor="table-search" className="sr-only">Search</label>
           <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <LuSearch className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </span>
             <input
               type="text"
               id="table-search-users"
               className="block pt-2 pb-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="Search for books"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="ml-2">
-            <button className="bg-indigo-600 text-white p-2 rounded-md flex items-center" onClick={openAddModal}>
-              <LuPlus />
-              <p className="pl-1">Add book</p>
-            </button>
-          </div>
-          <div className='mx-2'>
-            <button className='rounded-md border p-2 flex items-center bg-green-700 text-white'  onClick={() => openUploadModel()}> <LuUpload className="mr-2" />Upload excel</button>
-            <UploadExcelFile open={isUploadModalOpen} onClose={closeUploadModel} />
-          </div>
+          {(userRole == "Admin" || userRole == "Warehousekeeper") && (
+            <div className="ml-2">
+              <button className="bg-indigo-600 text-white p-2 rounded-md flex items-center" onClick={openAddModal}>
+                <LuPlus />
+                <p className="pl-1">Add book</p>
+              </button>
+            </div>
+          )}
+
+          {(userRole == "Admin" || userRole == "Warehousekeeper") && (
+            <div className='mx-2'>
+              <button className='rounded-md border p-2 flex items-center bg-green-700 text-white' onClick={openUploadModel}>
+                <LuUpload className="mr-2" />Upload excel
+              </button>
+              <UploadExcelFile open={isUploadModalOpen} onClose={closeUploadModel} />
+            </div>
+          )}
+
           <div className=''>
-            <button className='rounded-md border p-2 flex items-center bg-green-700 text-white'  onClick={() => handleOnclickExport()}><LuDownload className="mr-2" />Export excel</button>
+            <button className='rounded-md border p-2 flex items-center bg-green-700 text-white' onClick={() => handleOnclickExport()}><LuDownload className="mr-2" />Export excel</button>
           </div>
         </div>
       </div>
@@ -166,8 +193,8 @@ const Books = () => {
           </tr>
         </thead>
         <tbody>
-          {books.data && books.data.length > 0 ? (
-            books.data.map((book, index) => (
+          {filteredBooks.length > 0 ? (
+            filteredBooks.map((book, index) => (
               <tr
                 key={index}
                 className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -216,8 +243,8 @@ const Books = () => {
 
       {isModalOpen && <AddBook closeModal={closeModal} />}
       {isEditModalOpen && <EditBook bookId={selectedBook} closeEditModal={closeEditModal} />}
-     
-     
+
+
 
 
       {isConfirmModalOpen && (

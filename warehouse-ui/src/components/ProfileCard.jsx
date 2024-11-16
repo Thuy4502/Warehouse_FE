@@ -4,6 +4,8 @@ import Alert from '@mui/material/Alert';
 import { getUser } from '../State/Auth/Action'; 
 import { useDispatch, useSelector } from 'react-redux';
 import { updateStaff } from '../State/Staff/Action';
+import { uploadBytes } from 'firebase/storage';
+import { uploadStaffImageToFirebase, uploadStaffImageToFirebaseExcel } from '../config/FirebaseConfig';
 
 const ProfileCard = () => {
     const dispatch = useDispatch();
@@ -21,6 +23,9 @@ const [formData, setFormData] = useState({
     img: '',
     isEnable: '',
 });
+
+
+
 
 const [openSnackbar, setOpenSnackbar] = useState(false);
 const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -67,6 +72,9 @@ useEffect(() => {
     }
 }, [userInfor]);
 
+
+
+
 const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData({
@@ -75,16 +83,15 @@ const handleChange = (e) => {
     });
 };
 
+
+
 const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+        setSelectedFile(file); 
         const reader = new FileReader();
         reader.onloadend = () => {
-            setFormData((prevData) => ({
-                ...prevData,
-                img: reader.result,  // save image base64 data in formData
-            }));
-            setPreviewUrl(reader.result);  // update preview URL
+            setPreviewUrl(reader.result); 
         };
         reader.readAsDataURL(file);
     }
@@ -93,16 +100,15 @@ const handleFileChange = (e) => {
 const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        let imageUrl = formData.img;  // use formData img, which could be base64 or an uploaded URL
+        let imageUrl = formData.img;  
         if (selectedFile) {
-            imageUrl = await uploadImageToFirebase(selectedFile); // replace with Firebase upload if needed
+            imageUrl = await uploadStaffImageToFirebase(selectedFile); // Tải lên Firebase và nhận URL
             setFormData((prevData) => ({
                 ...prevData,
-                img: imageUrl,  // store the final uploaded image URL
+                img: imageUrl,  // Lưu URL vào formData
             }));
         }
-
-        await dispatch(updateStaff(userInfor?.data.staffId, formData));
+        await dispatch(updateStaff(userInfor?.data.staffId, { ...formData, img: imageUrl }));
         setSnackbarMessage('Profile updated successfully!');
         setSnackbarSeverity('success');
     } catch (error) {
@@ -113,6 +119,7 @@ const handleSubmit = async (e) => {
         setOpenSnackbar(true);
     }
 };
+
 
 const handleCloseSnackbar = () => {
     setOpenSnackbar(false);

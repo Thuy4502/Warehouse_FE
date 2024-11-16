@@ -1,34 +1,40 @@
-import React from 'react'
-import { GoBell } from 'react-icons/go'
-import { Menu, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import React from 'react';
+import { GoBell } from 'react-icons/go';
+import { Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const navigate = useNavigate();
+  const imageUrl = localStorage.getItem('img');
 
   const handleLogout = () => {
-    // Xóa token hoặc thông tin người dùng khỏi localStorage hoặc sessionStorage
-    localStorage.removeItem('token'); // Hoặc sessionStorage.removeItem('token') nếu bạn dùng sessionStorage
-
-    // Sau đó chuyển hướng về trang đăng nhập
+    localStorage.removeItem('token');
     navigate('/login');
   };
 
   return (
-    <div className='flex justify-between items-center p-4 bg-white shadow-md'>
+    <div className="flex justify-between items-center p-4 bg-white shadow-md">
       <div>
-        <h1 className='text-xs'>Chào mừng trở lại</h1>
-        <p className='text-xl font-semibold'>Meii</p>
+        {/* <h1 className="text-xs">Chào mừng trở lại</h1>
+        <p className="text-xl font-semibold">Meii</p> */}
       </div>
-      <div className='flex items-center space-x-5'>
-        <div className='hidden md:flex'>
-          <input type="text" name="" id="" placeholder='Tìm kiếm...' className='bg-indigo-100 px-4 py-2 rounded-lg focus:outline-0 focus:ring-2 focus:ring-indigo-600' />
+      <div className="flex items-center space-x-5">
+        <div className="hidden md:flex">
+          <input
+            type="text"
+            name=""
+            id=""
+            placeholder="Tìm kiếm..."
+            className="bg-indigo-100 px-4 py-2 rounded-lg focus:outline-0 focus:ring-2 focus:ring-indigo-600"
+          />
         </div>
-        <div className='flex items-center space-x-5'>
-          <button className='relative text-2xl text-gray-600'>
+        <div className="flex items-center space-x-5">
+          <button className="relative text-2xl text-gray-600">
             <GoBell size={32} />
-            <span className='absolute top-0 right-0 -mt-1 -mr-1 flex justify-center items-center bg-indigo-600 text-white font-semibold text-[10px] w-5 h-4 rounded-full border-2 border-white'>9</span>
+            <span className="absolute top-0 right-0 -mt-1 -mr-1 flex justify-center items-center bg-indigo-600 text-white font-semibold text-[10px] w-5 h-4 rounded-full border-2 border-white">
+              9
+            </span>
           </button>
           <div>
             <Menu as="div" className="relative">
@@ -37,7 +43,9 @@ const Header = () => {
                   <span className="sr-only">Open</span>
                   <div
                     className="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center bg-no-repeat"
-                    style={{ backgroundImage: 'url("https://i.pinimg.com/564x/b5/71/c9/b571c94777b1f87f968867080e12724d.jpg")' }}
+                    style={{
+                      backgroundImage: `url(${imageUrl || 'https://i.pinimg.com/564x/b5/71/c9/b571c94777b1f87f968867080e12724d.jpg'})`,
+                    }}
                   >
                     <span className="sr-only">Profile Picture</span>
                   </div>
@@ -57,8 +65,8 @@ const Header = () => {
                   <Menu.Item>
                     {({ active }) => (
                       <div
-                        className={`${active ? "bg-indigo-500 text-white" : "text-gray-700"} block cursor-pointer px-4 py-2 rounded-md`}
-                        onClick={() => navigate("/admin/profile")}
+                        className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-700'} block cursor-pointer px-4 py-2 rounded-md`}
+                        onClick={() => navigate('/admin/profile')}
                       >
                         Your Profile
                       </div>
@@ -67,8 +75,8 @@ const Header = () => {
                   <Menu.Item>
                     {({ active }) => (
                       <div
-                        className={`${active ? "bg-indigo-500 text-white" : "text-gray-700"} block cursor-pointer px-4 py-2 rounded-md`}
-                        onClick={() => navigate("/login")}
+                        className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-700'} block cursor-pointer px-4 py-2 rounded-md`}
+                        onClick={() => navigate('/login')}
                       >
                         Settings
                       </div>
@@ -77,7 +85,7 @@ const Header = () => {
                   <Menu.Item>
                     {({ active }) => (
                       <div
-                        className={`${active ? "bg-indigo-500 text-white" : "text-gray-700"} block cursor-pointer px-4 py-2 rounded-md`}
+                        className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-700'} block cursor-pointer px-4 py-2 rounded-md`}
                         onClick={handleLogout}
                       >
                         Logout
@@ -91,7 +99,9 @@ const Header = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Header;
+
+

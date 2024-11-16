@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Snackbar, Alert } from '@mui/material';
+import { changePassword } from '../State/Staff/Action';
+import { useDispatch } from 'react-redux';
 
 const ChangePasswordCard = () => {
-
+  const dispatch = useDispatch()
 
   const [reqData, setReqData] = useState({
     password: '',
@@ -111,7 +113,7 @@ const ChangePasswordCard = () => {
 
               <button
                 type="submit"
-                className="w-full text-white bg-primary hover:bg-primary-700 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                className="w-full text-white bg-indigo-500 hover:bg-primary-700 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center"
               >
                 Reset Password
               </button>

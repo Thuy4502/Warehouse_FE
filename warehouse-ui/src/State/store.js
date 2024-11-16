@@ -8,6 +8,8 @@ import { bookReducer } from "./Book/Reducer";
 import transactionRequestReducer from "./TransactionRequest/Reducer";
 import transactionReducer from "./Transaction/Reducer";
 import { staffReducer } from "./Staff/Reducer";
+import { statisticsReducer } from "./Statistic/Reducer";
+import supplierReducer from "./Supplier/Reducer";
 
 const rootReducers = combineReducers({
     auth: authReducer,
@@ -18,6 +20,8 @@ const rootReducers = combineReducers({
     transactionRequest: transactionRequestReducer,
     transaction: transactionReducer,
     staff: staffReducer,
+    statistic: statisticsReducer,
+    supplier: supplierReducer,
 });
 
 

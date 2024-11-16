@@ -15,13 +15,12 @@ import {
     UPDATE_PROFILE_SUCCESS
 } from "./ActionType";
 
-// Lấy danh sách nhân viên
 export const getAllStaff = () => async (dispatch) => {
     const token = localStorage.getItem("token");
     try {
         dispatch({ type: GET_ALL_STAFF_REQUEST });
 
-        const { data } = await axios.get(`${API_BASE_URL}/staff/getAll`, {
+        const { data } = await axios.get(`${API_BASE_URL}/stockdepartment/staff/getAll`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }, 
@@ -47,7 +46,7 @@ export const addStaff = (staffData) => async (dispatch) => {
     try {
         dispatch({ type: ADD_STAFF_REQUEST });
 
-        const { data } = await axios.post(`${API_BASE_URL}/auth/addStaff`, staffData, {
+        const { data } = await axios.post(`${API_BASE_URL}/admin/staff/addStaff`, staffData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -75,7 +74,7 @@ export const updateStaff = (staffId, staffData) => async (dispatch) => {
     try {
         dispatch({ type: UPDATE_PROFILE_REQUEST });
 
-        const { data } = await axios.put(`${API_BASE_URL}/staff/update/${staffId}`, staffData, {
+        const { data } = await axios.put(`${API_BASE_URL}/admin/staff/update/${staffId}`, staffData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -103,7 +102,7 @@ export const changePassword = (passwordData) => async (dispatch) => {
     try {
         dispatch({ type: CHANGE_PASSWORD_REQUEST });
 
-        const { data } = await axios.put(`${API_BASE_URL}/staff/change/password`, passwordData, {
+        const { data } = await axios.put(`${API_BASE_URL}/api/change/password`, passwordData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"

@@ -23,8 +23,6 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
         }));
     };
 
-    console.log("Rowwww", rows)
-
     const handleRowChange = (index, field, value) => {
         const updatedRows = [...rows];
         updatedRows[index][field] = value;
@@ -55,9 +53,6 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
         setRows(updatedRows);
     };
 
-
-    console.log("Chi tiết PN ", transaction)
-
     const [data, setData] = useState({
         businessPartner: transaction?.businessPartner || '',
         address: transaction?.address || '',
@@ -72,8 +67,6 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
         totalValue: transaction?.totalValue || 0,
 
     })
-
-    console.log("Dữ liệu gửi đi ", data)
 
 
     const handleSave = (event) => {

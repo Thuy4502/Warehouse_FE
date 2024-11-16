@@ -8,7 +8,7 @@ export const addBook = (bookData) => async (dispatch) => {
     const token = localStorage.getItem("token");
     try {
         dispatch({type: ADD_BOOK_REQUEST});
-        const {data} = await axios.post(`${API_BASE_URL}/book/add`, bookData, {
+        const {data} = await axios.post(`${API_BASE_URL}/admin/book/add`, bookData, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -31,7 +31,7 @@ export const addBookByExcel = (bookData) => async (dispatch) => {
     const token = localStorage.getItem("token");
     try {
         dispatch({type: ADD_BOOKS_BY_EXCEL_REQUEST});
-        const {data} = await axios.post(`${API_BASE_URL}/book/addByExcel`, bookData, {
+        const {data} = await axios.post(`${API_BASE_URL}/admin/book/addByExcel`, bookData, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -57,7 +57,7 @@ export const findBookById = (id) => async (dispatch) => {
     const token = localStorage.getItem("token");
     try {
         dispatch({ type: FIND_BOOK_BY_ID_REQUEST });
-        const { data } = await axios.get(`${API_BASE_URL}/book/id/${id}`, {
+        const { data } = await axios.get(`${API_BASE_URL}/api/book/id/${id}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -81,7 +81,7 @@ export const updateBook = (id, bookData) => async (dispatch) => {
     try {
         dispatch({type: UPDATE_BOOK_REQUEST});
         
-        const { data } = await axios.put(`${API_BASE_URL}/book/update/${id}`, bookData, {
+        const { data } = await axios.put(`${API_BASE_URL}/admin/book/update/${id}`, bookData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ export const getAllBooks = () => async (dispatch) => {
     try {
         dispatch({ type: GET_ALL_BOOK_REQUEST });
 
-        const { data } = await axios.get(`${API_BASE_URL}/book/getAll`, {
+        const { data } = await axios.get(`${API_BASE_URL}/api/book/getAll`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }, 

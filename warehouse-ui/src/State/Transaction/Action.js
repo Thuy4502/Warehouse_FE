@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL } from '../../config/apiConfig';
+
 import { 
     CREATE_TRANSACTION_FAILURE, 
     CREATE_TRANSACTION_REQUEST, 
@@ -20,7 +21,7 @@ export const addTransaction = (transactionData) => async (dispatch) => {
     try {
         dispatch({ type: CREATE_TRANSACTION_REQUEST});
 
-        const response = await axios.post(`${API_BASE_URL}/transaction/add`, transactionData, {
+        const response = await axios.post(`${API_BASE_URL}/staff/transaction/add`, transactionData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
             },
@@ -46,7 +47,7 @@ export const updateTransaction = (id, updateData) => async (dispatch) => {
     try {
         dispatch({ type: UPDATE_TRANSACTION_REQUEST});
         
-        const response = await axios.put(`${API_BASE_URL}/transaction/update/${id}`, updateData, {
+        const response = await axios.put(`${API_BASE_URL}/stockdepartment/transaction/update/${id}`, updateData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ export const getAllTransaction = (type) => async (dispatch) => {
     try {
         dispatch({ type: GET_ALL_TRANSACTION_REQUEST });
 
-        const { data } = await axios.get(`${API_BASE_URL}/transaction/getAll/${type}`, {
+        const { data } = await axios.get(`${API_BASE_URL}/stockdepartment/transaction/getAll/${type}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             },
@@ -102,7 +103,7 @@ export const getTransactionHistories = (type) => async (dispatch) => {
     try {
         dispatch({ type: GET_ALL_TRANSACTION_HISTORY_REQUEST });
 
-        const { data } = await axios.get(`${API_BASE_URL}/transaction/history`, {
+        const { data } = await axios.get(`${API_BASE_URL}/stockdepartment/transaction/history`, {
             params: { type },
             headers: {
                 "Authorization": `Bearer ${token}`

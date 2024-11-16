@@ -16,9 +16,11 @@ import Supplier from '../pages/Supplier';
 import UserProfileCard from '../pages/UserProfile';
 import FirebaseImageUpload from '../components/FirebaseImageUpload';
 import Staff from '../pages/Staff';
+import PrivateRoute from '../components/PrivateRoute';
+import NotFound from '../pages/NotFound';
 
 const AppRoutes = () => {
-  const token = localStorage.getItem('token'); 
+  const token = localStorage.getItem('token');
   return (
     <div>
       <Routes>
@@ -38,9 +40,12 @@ const AppRoutes = () => {
           <Route path='report' element={<Report />} />
           <Route path='suppliers' element={<Supplier />} />
           <Route path='profile' element={<UserProfileCard />} />
-          <Route path='uploadImage' element={<FirebaseImageUpload />} />
-          <Route path='staffs' element={<Staff/>} />
-          
+          <Route path='not-found' element={<NotFound />} />
+          <Route path="/admin" element={<PrivateRoute />}>
+            <Route path="staffs" element={<Staff />} />
+          </Route>
+
+
 
         </Route>
         <Route path='login' element={<Login />} />

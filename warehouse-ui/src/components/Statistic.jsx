@@ -1,24 +1,40 @@
 import React, { useEffect, useRef } from 'react';
 import ApexCharts from 'apexcharts';
+import { useDispatch, useSelector } from 'react-redux';
+import { getMonthlyTransaction } from '../State/Statistic/Action';
 
 const Statistic = () => {
     const chartRef = useRef(null);
+    const dispatch = useDispatch();
+
+    const state = useSelector((state) => state.statistic.monthlyTransactions || {});
+    const statisticList = state?.data || [];
+
+    useEffect(() => {
+        dispatch(getMonthlyTransaction(2024));
+    }, [dispatch]);
+
+    const monthNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+    const importData = statisticList.map((item) => parseFloat(item.importValue.replace(/,/g, '')));
+    const exportData = statisticList.map((item) => parseFloat(item.exportValue.replace(/,/g, '')));
+    const month = statisticList.map((item) => monthNames[item.month - 1]);
+    console.log(month);
 
     const options = {
         series: [
             {
                 name: "Nhập",
-                data: [150, 141, 145, 152, 135, 125],
+                data: importData,
                 color: "#1A56DB",
             },
             {
                 name: "Xuất",
-                data: [643, 413, 765, 412, 142, 173],
+                data: exportData,
                 color: "#7E3BF2",
             },
         ],
         chart: {
-            height: "100%",
+            height: "300px",
             type: "area",
             fontFamily: "Inter, sans-serif",
             dropShadow: {
@@ -56,48 +72,48 @@ const Statistic = () => {
             show: false,
             strokeDashArray: 4,
             padding: {
-                left: 20, // Tăng padding bên trái để không đè lên trục y
+                left: 20,
                 right: 2,
                 top: 0,
             },
         },
         xaxis: {
-            categories: ['01 February', '02 February', '03 February', '04 February', '05 February', '06 February', '07 February'],
+            categories: month,
             labels: {
-                show: true, // Hiển thị thông tin trên trục x
+                show: true,
                 style: {
-                    colors: '#9CA3AF', // Màu của chữ trên trục x
+                    colors: '#9CA3AF',
                     fontSize: '12px',
                 }
             },
             axisBorder: {
-                show: true, // Hiển thị đường kẻ trục x
-                color: '#D1D5DB', // Màu của đường kẻ trục x
+                show: true,
+                color: '#D1D5DB',
             },
             axisTicks: {
-                show: true, // Hiển thị đánh dấu trên trục x
+                show: true,
             },
         },
         yaxis: {
-            show: true, // Hiển thị trục y
+            show: true,
             labels: {
-                show: true, // Hiển thị thông tin trên trục y
+                show: true,
                 formatter: function (value) {
-                    return '$' + value; // Định dạng giá trị trên trục y
+                    return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
                 },
                 style: {
-                    colors: '#9CA3AF', // Màu của chữ trên trục y
+                    colors: '#9CA3AF',
                     fontSize: '12px',
                 }
             },
             axisBorder: {
-                show: true, // Hiển thị đường kẻ trục y
-                color: '#D1D5DB', // Màu của đường kẻ trục y
+                show: true,
+                color: '#D1D5DB',
             },
             axisTicks: {
-                show: true, // Hiển thị đánh dấu trên trục y
+                show: true,
             },
-            offsetX: -10, // Di chuyển trục y ra xa dữ liệu để tránh bị đè
+            offsetX: -10,
         },
     };
 
@@ -106,7 +122,7 @@ const Statistic = () => {
             const chart = new ApexCharts(chartRef.current, options);
             chart.render();
             return () => {
-                chart.destroy(); // Clean up the chart instance
+                chart.destroy();
             };
         }
     }, [options]);
@@ -122,8 +138,7 @@ const Statistic = () => {
                 <div ref={chartRef} id="data-series-chart"></div>
             </div>
         </div>
-
     );
-}
+};
 
 export default Statistic;

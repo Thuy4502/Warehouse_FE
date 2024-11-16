@@ -41,7 +41,7 @@ const AddStaff = ({ open, onClose }) => {
           if (rowNumber === 1) return; 
       
           const emailCell = row.getCell('E').value;
-          const email = emailCell && emailCell.hyperlink ? emailCell.text : emailCell; // Lấy text nếu là hyperlink
+          const email = emailCell && emailCell.hyperlink ? emailCell.text : emailCell; 
       
           const staffData = {
               username: row.getCell('A').value,

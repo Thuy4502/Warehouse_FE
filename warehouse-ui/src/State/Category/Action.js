@@ -9,7 +9,7 @@ export const getAllCategories = () => async (dispatch) => {
     try {
         dispatch({ type: GET_ALL_CATEGORY_REQUEST });
 
-        const { data } = await axios.get(`${API_BASE_URL}/category/getAll`, {
+        const { data } = await axios.get(`${API_BASE_URL}/api/category/getAll`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -32,7 +32,7 @@ export const addCategory = (category) => async (dispatch) => {
     try {
         dispatch({ type: CREATE_CATEGORY_REQUEST });
 
-        const { data } = await axios.post(`${API_BASE_URL}/category/add`, category, {
+        const { data } = await axios.post(`${API_BASE_URL}/admin/category/add`, category, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -54,7 +54,7 @@ export const updateCategory = (id, category) => async (dispatch) => {
     try {
         dispatch({ type: UPDATE_CATEGORY_REQUEST });
 
-        const { data } = await axios.put(`${API_BASE_URL}/category/update/${id}`, category, {
+        const { data } = await axios.put(`${API_BASE_URL}/admin/category/update/${id}`, category, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }

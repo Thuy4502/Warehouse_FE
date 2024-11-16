@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { addTransaction, getAllTransaction } from '../State/Transaction/Action';
-import { connect, useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Dialog, Select, MenuItem, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -19,27 +19,29 @@ import { getAllTransactionRequest } from '../State/TransactionRequest/Action';
 const AddImportModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
   const books = useSelector((state) => state.book.books.data || []);
-  const suppliers = useSelector((state) => state.supplier.suppliers.data || []);
-  const transactionRequests = useSelector((state) => state.transactionRequest.transactionRequests.data || []);
-  const staff = localStorage.getItem("staffId");
-
+  const suppliers = useSelector((state) => state.supplier.suppliers.data || [])
+  const transactionRequests = useSelector((state) => state.transactionRequest.transactionRequests.data || [])
+  const staff = localStorage.getItem("staffId")
   const listRequest = transactionRequests.filter(
     (request) => request.status === 'ACCEPTED'
   );
+
 
   const [data, setData] = useState({
     businessPartner: '',
     billCode: '',
     address: '',
     phone_number: '',
-    type: "Nhập",
+    type: '',
     transactionCode: '',
-    transactionRequestId: '',
+    transactionRequestId: listRequest.length > 0 ? listRequest[0].transactionRequestId : '',
     transactionItems: [],
     staffId: staff,
+    type: "Nhập",
     deliveryPerson: '',
     totalValue: 0,
-  });
+
+  })
 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
@@ -53,41 +55,34 @@ const AddImportModal = ({ isOpen, onClose }) => {
     }
   };
 
+
   useEffect(() => {
     dispatch(getAllBooks());
     dispatch(getAllSupplier());
-    dispatch(getAllTransactionRequest(data.type));
-  }, [dispatch, data.type]);
+    dispatch(getAllTransactionRequest(data.type))
+  }, [dispatch]);
 
+  console.log("Danh sách phiếu yêu cầu nhập ", listRequest)
 
-  console.log("Dữ liệu gửi đi ", data)
-
-  const [rows, setRows] = useState([{ id: 1, bookId: 0, requestQuantity: '', actualQuantity: '', price: '', note: '' }]);
+  
 
   const handleRowChange = (index, field, value) => {
     const updatedRows = [...rows];
     updatedRows[index][field] = value;
     setRows(updatedRows);
 
-    const updatedTransactionItems = updatedRows.map((row) => ({
-      bookId: row.bookId,
-      requestQuantity: row.requestQuantity,
-      actualQuantity: row.actualQuantity,
-      price: row.price,
-      note: row.note,
-    }));
-
     const totalValue = updatedRows.reduce((acc, row) => {
       const requestQuantity = parseFloat(row.requestQuantity) || 0;
       const actualQuantity = parseFloat(row.actualQuantity) || 0;
+
       const price = parseFloat(row.price) || 0;
       return acc + actualQuantity * price;
     }, 0);
 
     setData((prevData) => ({
       ...prevData,
-      transactionItems: updatedTransactionItems,
-      totalValue: totalValue,
+      transactionItems: updatedRows,
+      totalValue: totalValue
     }));
   };
 
@@ -96,25 +91,22 @@ const AddImportModal = ({ isOpen, onClose }) => {
     setRows(updatedRows);
   };
 
-  const [selectedTransactionRequest, setSelectedTransactionRequest] = useState(null);
-
   const handleFormChange = (field, value) => {
-    if (field === "transactionRequestId") {
-      const foundRequest = listRequest.find(
-        (request) => request.transactionRequestId == value
-      );
-      setSelectedTransactionRequest(foundRequest); 
-      console.log("Đã được thay đổi ", foundRequest);
-    }
 
     setData({ ...data, [field]: value });
-  };
 
-  console.log("Phiếu yêu cầu nhập ", transactionRequests)
+
+  };
 
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
   };
+
+  const selectedTransactionRequest = transactionRequests.find(
+    (request) => request.transactionRequestId === data.transactionRequestId
+  );
+
+  const [rows, setRows] = useState(selectedTransactionRequest?.transactionRequestItems);
 
   const handleAddRow = () => {
     const newRow = { id: rows.length + 1, bookId: 0, requestQuantity: '', actualQuantity: '', price: '', note: '' };
@@ -125,8 +117,7 @@ const AddImportModal = ({ isOpen, onClose }) => {
     }));
   };
 
-  console.log("Phiếu yêu cầu nhập hàng được chọn nhập gửi đi ", selectedTransactionRequest);
-
+  console.log("Phiếu yêu cầu nhập hàng được chọn nhập gửi đi ", selectedTransactionRequest)
 
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
@@ -272,12 +263,12 @@ const AddImportModal = ({ isOpen, onClose }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows?.map((row, index) => (
+                  {rows.map((row, index) => (
                     <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                       <td className="px-6 py-4 border border-gray-300">{index + 1}</td>
                       <td className="px-6 py-4 border border-gray-300">
                         <Select
-                          value={row.bookId || ''}
+                          value={row.book.bookName || ''}
                           onChange={(e) => handleRowChange(index, 'bookId', e.target.value)}
                           displayEmpty
                           fullWidth

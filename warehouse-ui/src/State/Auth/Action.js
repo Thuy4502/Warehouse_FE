@@ -11,7 +11,7 @@ export const login = (userData) => async (dispatch) => {
     localStorage.clear();
     dispatch(loginRequest());
     try {
-        const response = await axios.post(`${API_BASE_URL}/auth/login`, userData);
+        const response = await axios.post(`${API_BASE_URL}/api/login`, userData);
         const user = response.data;
         console.log("Thông tin đăng nhập ", user);
         if (user.token) {
@@ -33,7 +33,7 @@ const getUserFailure = (error) => ({ type: GET_USER_FAILURE, payload: error });
 export const getUser = (token) => async (dispatch) => {
     dispatch(getUserRequest());
     try {
-        const response = await axios.get(`${API_BASE_URL}/staff/profile`, {
+        const response = await axios.get(`${API_BASE_URL}/api/profile`, {
            headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -43,6 +43,8 @@ export const getUser = (token) => async (dispatch) => {
         const user = response.data;
         localStorage.setItem("staffId", user.data.staffId)
         localStorage.setItem("role", user.data.account.role.roleName);
+        localStorage.setItem("img", user.data.img);
+
         dispatch(getUserSuccess(user));
     } catch (error) {
         console.error("Error fetching user profile:", error.response ? error.response.data : error.message);

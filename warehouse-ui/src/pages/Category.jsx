@@ -69,8 +69,10 @@ const Category = () => {
                                     <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{category.categoryId}</th>
                                     <td className="px-6 py-4">{category.categoryName}</td>
                                     <td className="px-6 py-4">{category.description}</td>
-                                    <td className="px-6 py-4">{new Date(category.updatedAt).toLocaleDateString()}</td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4">
+                                        {category.updateAt && !isNaN(new Date(category.updateAt)) ? new Date(category.updateAt).toLocaleDateString() : 'N/A'}
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
                                         <button onClick={() => handleEditClick(category)} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</button>
                                     </td>
                                 </tr>
@@ -87,7 +89,7 @@ const Category = () => {
             <AddCategory
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
-                onCategoryAdded={() => dispatch(getAllCategories())} 
+                onCategoryAdded={() => dispatch(getAllCategories())}
             />
 
         </div>

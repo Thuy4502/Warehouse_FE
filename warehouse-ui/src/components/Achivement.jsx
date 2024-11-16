@@ -1,27 +1,40 @@
-import React from 'react';
-import { Typography, Button, Card, CardContent } from '@mui/material';
-import { styled } from '@mui/system';
-
-const TringleImg = styled("img")({
-    right: 0,
-    bottom: 0,
-    height: 170,
-    position: "absolute"
-});
-
-const TrophyImg = styled("img")({
-    right: 36,
-    bottom: 20,
-    height: 98,
-    position: 'absolute'
-});
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAchievementStatistic } from '../State/Statistic/Action';
 
 const Achievement = () => {
+    const dispatch = useDispatch();
+    
+    const state = useSelector((state) => state.statistic.achievementStatistic || {});
+
+    const statisticList = state?.data || {}; 
+
+    console.log("ACHIEVEMENT ", statisticList)
+
+    useEffect(() => {
+        dispatch(getAchievementStatistic());
+    }, [dispatch]);
+
+    const formatCurrency = (value) => {
+        if (value) {
+            const numericValue = parseFloat(value.replace(/,/g, ''));
+            if (!isNaN(numericValue)) {
+                return new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                    minimumFractionDigits: 0,
+                }).format(numericValue).replace('VND', 'đ');
+            }
+        }
+        return 'N/A';
+    };
+    
+
     return (
         <div>
             <div className="mt-4">
                 <div className="flex flex-wrap -mx-6">
-                    {/* Achievement Item 1 */}
+                    {/* Thẻ hiển thị tổng loại sách */}
                     <div className="w-full px-6 sm:w-1/4 xl:w-1/4">
                         <div className="flex items-center px-5 py-6 bg-white rounded-md shadow-sm">
                             <div className="p-3 bg-yellow-500 bg-opacity-75 rounded-full">
@@ -30,13 +43,13 @@ const Achievement = () => {
                                 </svg>
                             </div>
                             <div className="mx-5">
-                                <h4 className="text-2xl font-semibold text-gray-700">20</h4>
+                                <h4 className="text-2xl font-semibold text-gray-700">{statisticList[0]?.totalCategories || "N/A"}</h4>
                                 <div className="text-gray-500">Loại sách</div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Achievement Item 2 */}
+                    {/* Thẻ hiển thị tổng sách */}
                     <div className="w-full px-6 sm:w-1/4 xl:w-1/4">
                         <div className="flex items-center px-5 py-6 bg-white rounded-md shadow-sm">
                             <div className="p-3 bg-indigo-600 bg-opacity-75 rounded-full">
@@ -45,13 +58,13 @@ const Achievement = () => {
                                 </svg>
                             </div>
                             <div className="mx-5">
-                                <h4 className="text-2xl font-semibold text-gray-700">20</h4>
+                                <h4 className="text-2xl font-semibold text-gray-700">{statisticList[0]?.totalBooks || "N/A"}</h4>
                                 <div className="text-gray-500">Số lượng đầu sách</div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Achievement Item 3 */}
+                    {/* Thẻ hiển thị doanh thu nhập */}
                     <div className="w-full px-6 sm:w-1/4 xl:w-1/4">
                         <div className="flex items-center px-5 py-6 bg-white rounded-md shadow-sm">
                             <div className="p-3 bg-orange-600 bg-opacity-75 rounded-full">
@@ -60,13 +73,13 @@ const Achievement = () => {
                                 </svg>
                             </div>
                             <div className="mx-5">
-                                <h4 className="text-2xl font-semibold text-gray-700">116</h4>
-                                <div className="text-gray-500">Số lượng phiếu nhập</div>
+                                <h4 className="text-2xl font-semibold text-gray-700">{formatCurrency(statisticList[0]?.totalImportValue)}</h4>
+                                <div className="text-gray-500">Doanh thu nhập</div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Achievement Item 4 */}
+                    {/* Thẻ hiển thị doanh thu xuất */}
                     <div className="w-full px-6 sm:w-1/4 xl:w-1/4">
                         <div className="flex items-center px-5 py-6 bg-white rounded-md shadow-sm">
                             <div className="p-3 bg-pink-600 bg-opacity-75 rounded-full">
@@ -75,20 +88,20 @@ const Achievement = () => {
                                     <line x1="7" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"></line>
                                     <line x1="7" y1="14" x2="17" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"></line>
                                     <line x1="7" y1="18" x2="14" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"></line>
-                                    <path d="M14 22L18 18L14 14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"></path>
-                                    <path d="M18 18H10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"></path>
+                                    <path d="M14 22L18 18L14 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"></path>
                                 </svg>
                             </div>
                             <div className="mx-5">
-                                <h4 className="text-2xl font-semibold text-gray-700">20</h4>
-                                <div className="text-gray-500">Số lượng phiếu xuất</div>
+                                <h4 className="text-2xl font-semibold text-gray-700">{formatCurrency(statisticList[0]?.totalExportValue)}</h4>
+                                <div className="text-gray-500">Doanh thu xuất</div>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     );
-}
+};
 
 export default Achievement;

@@ -16,7 +16,7 @@ export const addTransactionRequest = (transactionData) => async (dispatch) => {
     try {
         dispatch({ type: CREATE_TRANSACTION_REQ_REQUEST });
 
-        const response = await axios.post(`${API_BASE_URL}/transaction_request/create`, transactionData, {
+        const response = await axios.post(`${API_BASE_URL}/warehousekeeper/transaction_request/create`, transactionData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
             },
@@ -42,7 +42,7 @@ export const updateTransactionRequest = (id, updateData) => async (dispatch) => 
     try {
         dispatch({ type: UPDATE_TRANSACTION_REQ_REQUEST });
         
-        const response = await axios.put(`${API_BASE_URL}/transaction_request/update/${id}`, updateData, {
+        const response = await axios.put(`${API_BASE_URL}/warehousekeeper/transaction_request/update/${id}`, updateData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export const getAllTransactionRequest = (type) => async (dispatch) => {
     try {
         dispatch({ type: GET_ALL_TRANSACTION_REQ_REQUEST });
 
-        const { data } = await axios.get(`${API_BASE_URL}/transaction_request/getAll/${type}`, {
+        const { data } = await axios.get(`${API_BASE_URL}/api/transaction_request/getAll/${type}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             },

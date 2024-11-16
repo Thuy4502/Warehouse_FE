@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LuPlus, LuUpload, LuDownload } from "react-icons/lu";
+import { LuPlus, LuUpload, LuDownload, LuSearch } from "react-icons/lu";
 import AddBook from '../components/AddBook';
 import EditBook from '../components/EditBook';
 import { getAllBooks, updateBook } from '../State/Book/Action';
@@ -16,8 +16,8 @@ const Staff = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [statusToUpdate, setStatusToUpdate] = useState('');
-
-  const { books } = useSelector((state) => state.book);
+  const [searchTerm, setSearchTerm] = useState("");
+  const role = localStorage.getItem("role");
   const { staffs } = useSelector((state) => state.staff);
 
   const dispatch = useDispatch();
@@ -55,10 +55,10 @@ const Staff = () => {
 
   const openConfirmModal = (staff) => {
     setSelectedStaff(staff.staffId);
-    const newStatus = !staff.isEnable; // Toggle the current status
+    const newStatus = !staff.isEnable;
 
     const updatedStaffData = {
-      staffId: staff.staffId, // Ensure staff ID is included
+      staffId: staff.staffId,
       isEnable: newStatus,
     };
 
@@ -74,10 +74,8 @@ const Staff = () => {
   const handleChangeStatus = async () => {
     if (selectedStaff) {
       try {
-        // Sending the updated status to the API
         await dispatch(updateStaff(selectedStaff, { isEnable: statusToUpdate }));
         closeConfirmModal();
-        // Optionally, re-fetch staff data to ensure the UI reflects the latest state
         dispatch(getAllStaff());
       } catch (error) {
         console.error("Error updating staff status:", error);
@@ -86,10 +84,22 @@ const Staff = () => {
   };
 
   const handleOnclickExport = async () => {
-    if (books && books.data) {
-      await CommonUtils.exportExcel(books.data, "Danh sách sách", "BookList");
+    if (staffs && staffs.data) {
+      await CommonUtils.exportExcel(staffs.data, "Danh sách nhân viên", "StaffList");
     }
   };
+
+  const filteredStaffs = staffs?.data?.filter((staff) => {
+    return (
+      staff.staffName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staff.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staff.phoneNumber?.includes(searchTerm) ||
+      staff.email?.includes(searchTerm) ||
+      String(staff.isEnable).includes(searchTerm)
+    );
+  });
+  
+  
 
   return (
     <div className="relative m-3 overflow-x-auto shadow-md sm:rounded-lg">
@@ -98,21 +108,26 @@ const Staff = () => {
         <div className="flex items-center mr-5">
           <label htmlFor="table-search" className="sr-only">Search</label>
           <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <LuSearch className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </span>
             <input
               type="text"
               id="table-search-users"
               className="block pt-2 pb-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Search for staffs"
+              placeholder="Tìm kiếm nhân viên"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className='mx-2'>
-            <button className='rounded-md border p-2 flex items-center bg-green-700 text-white' onClick={openUploadModel}> 
+          {(role === "Admin") && <div className='ml-2'>
+            <button className='rounded-md border p-2 flex items-center bg-green-700 text-white' onClick={openUploadModel}>
               <LuUpload className="mr-2" />Upload excel
             </button>
             <UploadExcelFile open={isUploadModalOpen} onClose={closeUploadModel} />
-          </div>
+          </div>}
           <div className=''>
-            <button className='rounded-md border p-2 flex items-center bg-green-700 text-white' onClick={handleOnclickExport}>
+            <button className='rounded-md border ml-2 p-2 flex items-center bg-green-700 text-white' onClick={handleOnclickExport}>
               <LuDownload className="mr-2" />Export excel
             </button>
           </div>
@@ -130,12 +145,12 @@ const Staff = () => {
             <th scope="col" className="px-6 py-3">Email</th>
             <th scope="col" className="px-6 py-3">Số điện thoại</th>
             <th scope="col" className="px-6 py-3">Trạng thái</th>
-            <th scope="col" className="px-6 py-3">Thay đổi trạng thái</th>
+            {(role === "Admin") && <th scope="col" className="px-6 py-3">Thay đổi trạng thái</th>}
           </tr>
         </thead>
         <tbody>
-          {staffs?.data && staffs.data.length > 0 ? (
-            staffs.data.map((staff, index) => (
+          {filteredStaffs?.length > 0 ? (
+            filteredStaffs.map((staff, index) => (
               <tr
                 key={index}
                 className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -155,7 +170,7 @@ const Staff = () => {
                     {staff?.isEnable ? 'true' : 'false'}
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                {(role === "Admin") && <td className="px-6 py-4">
                   <button
                     type="button"
                     onClick={() => openConfirmModal(staff)}
@@ -163,7 +178,8 @@ const Staff = () => {
                   >
                     Change Status
                   </button>
-                </td>
+                </td>}
+
               </tr>
             ))
           ) : (

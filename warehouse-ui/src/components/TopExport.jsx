@@ -13,7 +13,7 @@ const TopExport = () => {
     
 
     return (
-        <div className="bg-white shadow-xl rounded-lg">
+        <div className="bg-white rounded-lg h-full shadow-sm">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 py-5">
                 <h2 className="text-xl font-bold tracking-tight text-gray-900">Top 3 đầu sách xuất nhiều nhất tháng</h2>
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">

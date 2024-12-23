@@ -21,7 +21,7 @@ export const addTransaction = (transactionData) => async (dispatch) => {
     try {
         dispatch({ type: CREATE_TRANSACTION_REQUEST});
 
-        const response = await axios.post(`${API_BASE_URL}/staff/transaction/add`, transactionData, {
+        const response = await axios.post(`${API_BASE_URL}/warehouse_keeper/transaction/add`, transactionData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
             },
@@ -34,9 +34,15 @@ export const addTransaction = (transactionData) => async (dispatch) => {
             payload: response.data,
         });
 
+        // ngay tại chỗ này.
+        // dispatch({
+        //     type: GET_ALL_TRANSACTION_SUCCESS,
+        //     payload: response.data,
+        // });
+
     } catch (error) {
-        console.error('Error creating transaction ', error.response ? error.response.data : error.message);
-        dispatch({ type: CREATE_TRANSACTION_FAILURE, payload: error.message });
+        const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi không xác định.";
+        dispatch({ type: CREATE_TRANSACTION_FAILURE, payload: errorMessage});
     }
 }
 
@@ -47,7 +53,7 @@ export const updateTransaction = (id, updateData) => async (dispatch) => {
     try {
         dispatch({ type: UPDATE_TRANSACTION_REQUEST});
         
-        const response = await axios.put(`${API_BASE_URL}/stockdepartment/transaction/update/${id}`, updateData, {
+        const response = await axios.put(`${API_BASE_URL}/warehouse_keeper/transaction/update/${id}`, updateData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 'Content-Type': 'application/json',
@@ -84,6 +90,8 @@ export const getAllTransaction = (type) => async (dispatch) => {
             },
             
         });
+        
+     
 
 
         dispatch({
@@ -103,8 +111,7 @@ export const getTransactionHistories = (type) => async (dispatch) => {
     try {
         dispatch({ type: GET_ALL_TRANSACTION_HISTORY_REQUEST });
 
-        const { data } = await axios.get(`${API_BASE_URL}/stockdepartment/transaction/history`, {
-            params: { type },
+        const { data } = await axios.get(`${API_BASE_URL}/stockdepartment/inventory_log/getAll/${type}`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             },

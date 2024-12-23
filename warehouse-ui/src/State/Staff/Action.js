@@ -7,6 +7,7 @@ import {
     CHANGE_PASSWORD_FAILURE, 
     CHANGE_PASSWORD_REQUEST, 
     CHANGE_PASSWORD_SUCCESS, 
+    CHANGE_STAFF_STATUS_REQUEST, 
     GET_ALL_STAFF_FAILURE, 
     GET_ALL_STAFF_REQUEST, 
     GET_ALL_STAFF_SUCCESS, 
@@ -74,14 +75,12 @@ export const updateStaff = (staffId, staffData) => async (dispatch) => {
     try {
         dispatch({ type: UPDATE_PROFILE_REQUEST });
 
-        const { data } = await axios.put(`${API_BASE_URL}/admin/staff/update/${staffId}`, staffData, {
+        const { data } = await axios.put(`${API_BASE_URL}/api/update/${staffId}`, staffData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }, 
         });
-
-        console.log("Thông tin thay đổi trạng thái của nhân viên ", data)
 
         dispatch({
             type: UPDATE_PROFILE_SUCCESS,
@@ -96,6 +95,37 @@ export const updateStaff = (staffId, staffData) => async (dispatch) => {
         });
     }
 };
+
+export const changeStaffStatus = (staffId, staffData) => async (dispatch) => {
+
+    console.log("Dữ liệu gọi api ", staffData)
+    const token = localStorage.getItem("token");
+    try {
+        dispatch({ type: CHANGE_STAFF_STATUS_REQUEST });
+
+        const { data } = await axios.put(`${API_BASE_URL}/admin/staff/changeStaffStatus/${staffId}`, staffData, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }, 
+        });
+
+        console.log("Thông tin thay đổi trạng thái của nhân viên ", data)
+
+        dispatch({
+            type: CHANGE_PASSWORD_SUCCESS,
+            payload: data,
+        });
+
+    } catch (error) {
+        console.error('Error updating staff:', error.response ? error.response.data : error.message);
+        dispatch({ 
+            type: CHANGE_PASSWORD_FAILURE, 
+            payload: error.response ? error.response.data : error.message 
+        });
+    }
+};
+
 
 export const changePassword = (passwordData) => async (dispatch) => {
     const token = localStorage.getItem("token");

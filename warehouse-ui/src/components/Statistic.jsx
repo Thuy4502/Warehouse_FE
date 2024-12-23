@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ApexCharts from 'apexcharts';
 import { useDispatch, useSelector } from 'react-redux';
 import { getMonthlyTransaction } from '../State/Statistic/Action';
@@ -6,19 +6,22 @@ import { getMonthlyTransaction } from '../State/Statistic/Action';
 const Statistic = () => {
     const chartRef = useRef(null);
     const dispatch = useDispatch();
+    const [selectedYear, setSelectedYear] = useState(2024);
 
     const state = useSelector((state) => state.statistic.monthlyTransactions || {});
     const statisticList = state?.data || [];
 
     useEffect(() => {
-        dispatch(getMonthlyTransaction(2024));
-    }, [dispatch]);
+        dispatch(getMonthlyTransaction(selectedYear)); 
+    }, [dispatch, selectedYear]);
 
-    const monthNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+    const monthNames = [
+        "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+        "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
+    ];
     const importData = statisticList.map((item) => parseFloat(item.importValue.replace(/,/g, '')));
     const exportData = statisticList.map((item) => parseFloat(item.exportValue.replace(/,/g, '')));
     const month = statisticList.map((item) => monthNames[item.month - 1]);
-    console.log(month);
 
     const options = {
         series: [
@@ -127,12 +130,34 @@ const Statistic = () => {
         }
     }, [options]);
 
+    const handleYearChange = (event) => {
+        setSelectedYear(Number(event.target.value)); // Cập nhật năm được chọn
+    };
+
     return (
         <div className="w-full">
             <div className="w-full bg-white rounded-lg shadow dark:bg-gray-800 p-4 md:p-6">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                     <div>
-                        <h5 className="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">Thống kê nhập - xuất</h5>
+                        <h5 className="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">
+                            Thống kê nhập - xuất
+                        </h5>
+                    </div>
+                    <div>
+                        <select
+                            value={selectedYear}
+                            onChange={handleYearChange}
+                            className="border border-gray-300 rounded px-2 py-1 dark:bg-gray-700 dark:text-white"
+                        >
+                            {Array.from({ length: 10 }, (_, i) => {
+                                const year = new Date().getFullYear() - i;
+                                return (
+                                    <option key={year} value={year}>
+                                        {year}
+                                    </option>
+                                );
+                            })}
+                        </select>
                     </div>
                 </div>
                 <div ref={chartRef} id="data-series-chart"></div>

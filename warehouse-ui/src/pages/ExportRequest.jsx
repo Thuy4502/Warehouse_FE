@@ -9,8 +9,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { getAllBooks } from '../State/Book/Action';
 import { addTransactionRequest, getAllTransactionRequest } from '../State/TransactionRequest/Action';
 import EditTransactionRequest from '../components/EditTransactionRequest';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
-const AddExportRequestModal = ({ isOpen, onClose }) => {
+const AddExportRequestModal = ({ isOpen, onClose, onSuccess }) => {
     const books = useSelector((state) => state.book.books.data || []);
     const dispatch = useDispatch();
     const staff = localStorage.getItem("staffId")
@@ -28,16 +30,20 @@ const AddExportRequestModal = ({ isOpen, onClose }) => {
 
     })
 
-    console.log("Dữ liệu gửi đi ", data)
+    const transactionRequests = useSelector((state) => state.transactionRequest.transactionRequests.data || []);
 
-
-    const handleSave = (event) => {
+    const handleSave = async (event) => {
         event.preventDefault();
         dispatch(addTransactionRequest(data));
+        dispatch(getAllTransactionRequest("Xuất"))
+        onSuccess();
+        onClose()
     };
+
 
     useEffect(() => {
         dispatch(getAllBooks());
+        dispatch(getAllTransactionRequest("Xuất"))
     }, [dispatch]);
 
 
@@ -79,6 +85,8 @@ const AddExportRequestModal = ({ isOpen, onClose }) => {
         setData({ ...data, [field]: value });
     };
 
+    console.log("Phiếu yêu cầu xuất ", data)
+
     return (
         <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
             <div
@@ -92,7 +100,7 @@ const AddExportRequestModal = ({ isOpen, onClose }) => {
                         <div className='px-3 pt-3'>
                             <div className='flex justify-between'>
                                 <div>
-                                    <h4>CÔNG TY CỔ PHẦN ĐẦU TƯ VÀ CÔNG NGHỆ X</h4>
+                                    <h4>CÔNG TY QUẢN LÝ KHO AN AN</h4>
                                     <p>Số 97 Man Thiện, P. Tăng Nhơn Phú A, Tp. Thủ Đức</p>
                                 </div>
                                 <div>
@@ -102,11 +110,9 @@ const AddExportRequestModal = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
                             <div className='text-center mt-10'>
-                                <h2 className='text-xl font-bold'>PHIẾU YÊU CẦU XUẤT HÀNG</h2>
-                                <p className='italic font-bold'>Ngày...tháng...năm...</p>
-                                <p>Số: NK00012</p>
+                                <h2 className='text-xl font-bold'>PHIẾU ĐỀ NGHỊ XUẤT HÀNG</h2>
                             </div>
-                            <div className="space-y-4 mr-5">
+                            <div className="space-y-4 mr-5 mt-5">
                                 <div className="flex items-center">
                                     <p className="w-1/5">Người đề xuất:</p>
                                     <input
@@ -124,33 +130,35 @@ const AddExportRequestModal = ({ isOpen, onClose }) => {
                                         type="text"
                                         value={data.phoneNumber}
                                         onChange={(e) => handleFormChange('phoneNumber', e.target.value)}
-                                        placeholder="Nhập tên người đề xuất"
+                                        placeholder="Nhập số điện thoại"
                                         className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
                                 <div className="flex items-center">
                                     <p className="w-1/5">Chức danh:</p>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={data.position}
                                         onChange={(e) => handleFormChange('position', e.target.value)}
-                                        placeholder="Nhập chức danh"
                                         className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                    >
+                                        <option value="" disabled>Chọn chức danh</option>
+                                        <option value="Thủ Kho">Thủ kho</option>
+                                        <option value="Nhân viên phòng kinh doanh">Nhân viên phòng kinh doanh</option>
+                                    </select>
                                 </div>
-
-
 
                                 <div className="flex items-center">
                                     <p className="w-1/5">Bộ phận:</p>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={data.department}
                                         onChange={(e) => handleFormChange('department', e.target.value)}
-                                        placeholder="Nhập bộ phận"
                                         className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                    >
+                                        <option value="" disabled>Chọn bộ phận</option>
+                                        <option value="Kho">Kho</option>
+                                        <option value="Phòng kinh doanh">Phòng kinh doanh</option>
+                                    </select>
                                 </div>
 
                                 <div className="flex items-center">
@@ -233,36 +241,18 @@ const AddExportRequestModal = ({ isOpen, onClose }) => {
                                 </tbody>
                             </table>
 
-                            <div className="mb-4">
-                                <p className="font-bold">Tổng tiền: {data.totalValue.toLocaleString()} VND</p>
-                            </div>
-
-                            <div className="flex justify-center mb-5">
+                            <div className="flex justify-center items-center mb-5">
                                 <IconButton onClick={handleAddRow} color="primary">
                                     <AddIcon />
                                 </IconButton>
                             </div>
-                            <div className="flex justify-between mb-20">
-                                <div>
-                                    <p className='font-bold'>Đại diện BGD</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Kế toán trưởng</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Thủ kho</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Người lập phiếu</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
+
+                            <div className="mb-4">
+                                <p className="font-bold">Tổng tiền: {data.totalValue.toLocaleString()} VND</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+                        <div className="flex items-center justify-end p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
                             <button
                                 type="submit"
                                 className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -274,7 +264,7 @@ const AddExportRequestModal = ({ isOpen, onClose }) => {
                                 onClick={onClose}
                                 className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600"
                             >
-                                Hủy
+                                Đóng
                             </button>
                         </div>
                     </form>
@@ -283,7 +273,6 @@ const AddExportRequestModal = ({ isOpen, onClose }) => {
         </Dialog>
     );
 };
-
 
 const ExportRequest = () => {
     const [startDate, setStartDate] = useState(null);
@@ -294,33 +283,34 @@ const ExportRequest = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedTransactionRequest, setSelectedTransactionRequest] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-
-
-    console.log("Dữ liệu truyền đi  ", selectedTransactionRequest)
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize] = useState(5);
+    const role = localStorage.getItem("role")
     const dispatch = useDispatch();
     const type = "Xuất"
-    useEffect(() => {
-        dispatch(getAllTransactionRequest(type));
-    }, [dispatch]);
+
 
     const handleEditButtonClick = (request) => {
         setSelectedTransactionRequest(request);
         setIsEditModalOpen(true);
     };
 
+    useEffect(() => {
+        dispatch(getAllTransactionRequest(type));
+    }, [dispatch]);
+
     const filteredTransactionsRequest = transactionRequests.filter(transactionRequest => {
         const transactionRequestId = String(transactionRequest?.transactionRequestId || '').toLowerCase();
         const transactionDate = new Date(transactionRequest.createAt);
-        const createBy = transactionRequest.createBy.toLowerCase() || ''; 
-        const status = transactionRequest.status.toLowerCase() || ''; 
-        const updatedBy = transactionRequest?.staff.staffName.toLowerCase() || ''; 
+        const createBy = transactionRequest.createBy.toLowerCase() || '';
+        const status = transactionRequest.status.toLowerCase() || '';
+        const updatedBy = transactionRequest?.staff.staffName.toLowerCase() || '';
 
-    
         return (
             (!startDate || transactionDate >= startDate) &&
             (!endDate || transactionDate <= endDate) &&
             (!searchTerm ||
-                createBy.includes(searchTerm.toLowerCase()) || 
+                createBy.includes(searchTerm.toLowerCase()) ||
                 status.includes(searchTerm.toLowerCase()) ||
                 transactionRequestId.includes(searchTerm.toLowerCase()) ||
                 updatedBy.includes(searchTerm.toLowerCase())
@@ -328,12 +318,32 @@ const ExportRequest = () => {
             )
         );
     });
-    
+
+    const paginatedTransactions = filteredTransactionsRequest.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    )
+
+    const handlePageChange = (event, value) => {
+        setCurrentPage(value);
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString || isNaN(new Date(dateString))) return 'N/A';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
+    const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+    console.log("Phiếu yêu cầu xuất ", transactionRequests)
 
     return (
         <div>
             <div className='bg-white m-3'>
-                <div className='font-bold text-3xl p-3 ml-5'>Quản lý phiếu yêu cầu xuất</div>
+                <div className='font-bold text-3xl p-3 ml-5'>Quản lý phiếu đề nghị xuất</div>
 
                 <div className="mr-5 p-5 flex justify-between items-center" style={{ float: 'right', width: '100%' }}>
                     <div className="flex items-center pl-5">
@@ -351,12 +361,12 @@ const ExportRequest = () => {
                                     selectsStart
                                     startDate={startDate}
                                     endDate={endDate}
-                                    placeholderText="Select date start"
+                                    placeholderText="Chọn ngày bắt đầu"
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 />
                             </div>
 
-                            <span className="mx-4 text-gray-500">to</span>
+                            <span className="mx-4 text-gray-500">đến</span>
 
                             <div className="relative">
                                 <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-10">
@@ -370,7 +380,7 @@ const ExportRequest = () => {
                                     selectsEnd
                                     startDate={startDate}
                                     endDate={endDate}
-                                    placeholderText="Select date end"
+                                    placeholderText="Chọn ngày kết thúc"
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 />
 
@@ -401,15 +411,17 @@ const ExportRequest = () => {
                                 id="table-search-users"
                                 className="block pt-2.5 pb-2.5 items-center ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 placeholder="Tìm kiếm phiếu yêu cầu xuất"
-                                onChange={(e) => setSearchTerm(e.target.value)} 
+                                onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <div className="ml-2">
-                            <button className="bg-indigo-600 text-white p-2 rounded-md flex items-center" onClick={() => setIsAddModalOpen(true)}>
-                                <LuPlus />
-                                <p className="pl-1">Thêm</p>
-                            </button>
-                        </div>
+                        {role === "Salesperson" && (
+                            <div className="ml-2">
+                                <button className="bg-indigo-600 text-white p-2 rounded-md flex items-center" onClick={() => setIsAddModalOpen(true)}>
+                                    <LuPlus />
+                                    <p className="pl-1">Thêm</p>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -445,31 +457,31 @@ const ExportRequest = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredTransactionsRequest.map((request, index) => (
+                            {paginatedTransactions.map((request, index) => (
                                 <tr
                                     key={request.id}
                                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                     <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                        {index + 1}
+                                        {(currentPage - 1) * pageSize + index + 1}
                                     </th>
                                     <td className="px-6 py-4">
-                                        {request.transactionRequestId}
+                                        {request.transactionRequestCode}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {request.totalValue}
+                                        {formatCurrency(request.totalValue)}
                                     </td>
                                     <td className="px-6 py-4">
                                         {request.status}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {request.createAt}
+                                        {formatDate(request.createAt)}
 
                                     </td>
                                     <td className="px-6 py-4">
                                         {request.createBy}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {request.staff.staffName}
+                                        {request.staffUpdate?.staffName || ''}
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className='flex'>
@@ -477,14 +489,6 @@ const ExportRequest = () => {
                                                 <button className="flex p-1 bg-yellow-500 rounded-xl hover:rounded-3xl hover:bg-yellow-600 transition-all duration-300 text-white" onClick={() => handleEditButtonClick(request)}>
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-
-                                            <div>
-                                                <button className="flex p-1 bg-red-500 rounded-xl hover:rounded-3xl hover:bg-red-600 transition-all duration-300 text-white">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                                                     </svg>
                                                 </button>
                                             </div>
@@ -498,16 +502,34 @@ const ExportRequest = () => {
                         </tbody>
                     </table>
                 </div>
-
+                <div className="flex justify-center fixed bottom-0 left-0 w-full bg-white shadow-md">
+                    <Stack spacing={2}>
+                        <Pagination
+                            count={Math.ceil(filteredTransactionsRequest.length / pageSize)}
+                            page={currentPage}
+                            onChange={handlePageChange}
+                            shape="rounded"
+                        />
+                    </Stack>
+                </div>
             </div>
             <AddExportRequestModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
+                onClose={() => {
+                    setIsAddModalOpen(false)
+                    dispatch(getAllTransactionRequest("Xuất"));
+
+                }}
+                onSuccess={() => dispatch(getAllTransactionRequest(type))}
             />
             <EditTransactionRequest
                 isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
+                onClose={() => {
+                    setIsEditModalOpen(false)
+                    dispatch(getAllTransactionRequest(type))
+                }}
                 transactionRequest={selectedTransactionRequest}
+                onSuccess={() => dispatch(getAllTransactionRequest(type))}
             />
         </div>
     )

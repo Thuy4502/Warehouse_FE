@@ -1,22 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { LuPlus } from "react-icons/lu";
+import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { addTransaction, getAllTransaction } from '../State/Transaction/Action';
-import { useDispatch, useSelector } from 'react-redux';
-import { Dialog, Select, MenuItem, IconButton } from '@mui/material';
+import { connect, useDispatch, useSelector } from 'react-redux';
+import { Dialog, Select, MenuItem, IconButton, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getAllBooks } from '../State/Book/Action';
 import EditTransaction from '../components/EditTransaction';
+import CommonUtils from '../utils/CommonUtils';
+import { LuPlus, LuUpload, LuDownload } from "react-icons/lu";
+import { Snackbar, Alert } from '@mui/material';
+import { getAllSupplier } from '../State/Supplier/Action';
+import { getAllTransactionRequest } from '../State/TransactionRequest/Action';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
 
 
 
-const AddImportModal = ({ isOpen, onClose }) => {
+const AddExportModal = ({ isOpen, onClose, onSuccess }) => {
   const books = useSelector((state) => state.book.books.data || []);
   const dispatch = useDispatch();
+  const transactionRequests = useSelector((state) => state.transactionRequest.transactionRequests.data || []);
   const staff = localStorage.getItem("staffId")
+  const [errors, setErrors] = useState({});
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedTransactionRequest, setSelectedTransactionRequest] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [rows, setRows] = useState([{ id: 1, bookId: 0, requestQuantity: '', actualQuantity: '', price: '', note: '' }]);
+  const errorMessage = useSelector((state) => state.transaction.error || null);
 
 
   const [data, setData] = useState({
@@ -29,25 +43,66 @@ const AddImportModal = ({ isOpen, onClose }) => {
     transactionItems: [],
     staffId: staff,
     type: "Xuất",
-
     totalValue: 0,
 
   })
 
-  console.log("Dữ liệu gửi đi ", data)
-
-
-  const handleSave = (event) => {
+  const handleSave = async (event) => {
     event.preventDefault();
-    dispatch(addTransaction(data));
+    if (validateFields()) {
+      try {
+        await dispatch(addTransaction(data));
+        if (errorMessage != null) {
+          setSnackbar({ open: true, message: 'Tạo phiếu xuât thành công!', severity: 'success' });
+          onClose()
+
+        }
+        // onSuccess()
+
+      } catch (error) {
+        setSnackbar({ open: true, message: 'Tạo phiếu xuất thất bại!', severity: 'error' });
+      }
+    }
+
   };
 
   useEffect(() => {
     dispatch(getAllBooks());
+    dispatch(getAllTransactionRequest("Xuất"))
   }, [dispatch]);
 
 
-  const [rows, setRows] = useState([{ id: 1, bookId: 0, requestQuantity: '', actualQuantity: '', price: '', note: '' }]);
+  const validateFields = () => {
+    const newErrors = {};
+    if (!data.transactionRequestId) newErrors.transactionRequestId = "Không được bỏ trống phiếu yêu cầu xuất";
+    if (!data.businessPartner) newErrors.businessPartner = "Không được bỏ trống tên khách hàng";
+    if (!data.address) newErrors.address = "Không được bỏ trống địa chỉ";
+
+    rows.forEach((item, index) => {
+      if (item.bookId === '' || item.bookId === null || item.bookId === 0) {
+        newErrors[`bookId-${index}`] = "Không được bỏ trống tên sách";
+      }
+      if (item.actualQuantity === '' || item.actualQuantity === null || item.actualQuantity <= 0) {
+        newErrors[`actualQuantity-${index}`] = "Không được bỏ trống số lượng";
+      }
+      if (item.actualQuantity > 999999) {
+        newErrors[`actualQuantity-${index}`] = "Số lượng vượt quá giới hạn (999,999)";
+      }
+      if (item.note && item.note.length > 500) {
+        console.log("Độ dài note ", item.note.length)
+        newErrors[`note-${index}`] = "Số lượng ký tự giới hạn là 500 ký tự";
+      }
+      if (!item.price || item.price <= 0) {
+        newErrors[`price-${index}`] = "Không được bỏ trống đơn giá";
+      } else if (item.price > 999999) {
+        newErrors[`price-${index}`] = "Đơn giá vượt quá giới hạn (999,999)";
+      }
+    });
+
+    setErrors(newErrors);
+    console.error("lỗi la ", newErrors)
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleAddRow = () => {
     const newRow = { id: rows.length + 1, bookId: 0, requestQuantity: '', actualQuantity: '', price: '', note: '' };
@@ -58,107 +113,196 @@ const AddImportModal = ({ isOpen, onClose }) => {
     }));
   };
 
+  const listRequest = transactionRequests.filter(
+    (request) => request.status === 'Đã duyệt' && request.type.typeId === 2
+  );
+
+  console.log("error", errorMessage)
+
+
   const handleRowChange = (index, field, value) => {
     const updatedRows = [...rows];
     updatedRows[index][field] = value;
     setRows(updatedRows);
 
+    const updatedTransactionItems = updatedRows.map((row) => ({
+      bookId: row.bookId,
+      requestQuantity: row.requestQuantity,
+      actualQuantity: row.actualQuantity,
+      price: row.price,
+      note: row.note,
+    }));
+
     const totalValue = updatedRows.reduce((acc, row) => {
       const requestQuantity = parseFloat(row.requestQuantity) || 0;
       const actualQuantity = parseFloat(row.actualQuantity) || 0;
-
       const price = parseFloat(row.price) || 0;
       return acc + actualQuantity * price;
     }, 0);
 
     setData((prevData) => ({
       ...prevData,
-      transactionItems: updatedRows,
-      totalValue: totalValue
+      transactionItems: updatedTransactionItems,
+      totalValue: totalValue,
     }));
-  };
+  };;
 
-  const handleDeleteRow = (index) => {
+  const handleDeleteRow = () => {
+    let index = selectedRow
     const updatedRows = rows.filter((_, i) => i !== index);
     setRows(updatedRows);
+    closeConfirmModal()
+  };
+
+  const openConfirmModal = (index) => {
+    setSelectedRow(index)
+    setIsConfirmModalOpen(true);
+  };
+
+  const closeConfirmModal = () => {
+    setIsConfirmModalOpen(false);
   };
 
   const handleFormChange = (field, value) => {
-    setData({ ...data, [field]: value });
+    if (field === "transactionRequestId") {
+      const foundRequest = listRequest.find(
+        (request) => request.transactionRequestId == value
+      );
+
+      setSelectedTransactionRequest(foundRequest);
+
+      if (foundRequest && foundRequest.transactionRequestItems) {
+        const newRows = foundRequest.transactionRequestItems.map((item, index) => ({
+          id: index + 1,
+          bookId: item.book.bookId || 0,
+          requestQuantity: item.requestQuantity || 0,
+          actualQuantity: '',
+          price: item.price || '',
+          note: item.note || '',
+        }));
+
+        setRows(newRows);
+        console.log("Dữ liệu của hàng ", newRows);
+      }
+    }
+
+    if (value) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [field]: null,
+      }));
+    }
+
+    setData((prevData) => ({ ...prevData, [field]: value }));
   };
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const checkSpecialChar = (e) => {
+    if (!e || !e.target || typeof e.target.value !== 'string') {
+      return;
+    }
+
+    const value = e.target.value;
+    const sanitizedValue = value.replace(/[&!\/\\#,+()$~%.'":*?<>{}0-9]/g, '');
+    e.target.value = sanitizedValue;
+  };
+
+  const checkSpecialCharForAddress = (e) => {
+    if (!e || !e.target || typeof e.target.value !== 'string') {
+      return;
+    }
+
+    const value = e.target.value;
+    const sanitizedValue = value.replace(/[&!\\\#+$~%'":*?<>{}]/g, '');
+    e.target.value = sanitizedValue;
+  };
+
+
 
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
       <div
-        id="editCategoryModal"
+        id="addTransactionModal"
         tabIndex="-1"
         aria-hidden="true"
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full"
       >
         <div className="relative w-full max-w-5xl max-h-full">
           <form className="relative bg-white rounded-lg shadow dark:bg-gray-700 font-times-new-roman text-black" onSubmit={handleSave}>
-            <div className='px-3 pt-3'>
+            <div className='px-3 pt-3' id="add-transaction-modal">
               <div className='flex justify-between'>
                 <div>
-                  <h4>CÔNG TY CỔ PHẦN ĐẦU TƯ VÀ CÔNG NGHỆ X</h4>
+                  <h4>CÔNG TY QUẢN LÝ KHO AN AN</h4>
                   <p>Số 97 Man Thiện, P. Tăng Nhơn Phú A, Tp. Thủ Đức</p>
-                </div>
-                <div>
-                  <h4 className='font-bold text-center'>Mẫu số: 04 - VT</h4>
-                  <p className='italic text-center'> (Ban hành theo thông tư số 88/2021/TT-BTC</p>
-                  <p className='italic text-center'>Ngày 11 tháng 10 năm 2021 của Bộ trưởng Bộ Tài Chính) </p>
                 </div>
               </div>
               <div className='text-center mt-10'>
-                <h2 className='text-xl font-bold'>PHIẾU XUẤT KHO</h2>
-                <p className='italic font-bold'>Ngày...tháng...năm...</p>
-                <span className='flex justify-center items-center'>
-                  <p className='mr-2'>Số: </p>
-                  <input
-                    type="text"
-                    value={data.createBy}
-                    onChange={(e) => handleFormChange('transactionCode', e.target.value)}
-                    placeholder="Nhập số PX"
-                    className="w-[100px] py-2   "
-                  />
-                </span>
+                <h2 className='text-xl font-bold mb-5'>PHIẾU XUẤT KHO</h2>
               </div>
-              <div className="space-y-4 mr-5">
+              <div className="space-y-4 mr-5 mt-3">
                 <div className="flex items-center">
-                  <p className="w-1/5">Customer:</p>
-                  <input
+                  <p className="w-1/5">Tên khách hàng:</p>
+                  <TextField
                     type="text"
                     value={data.businessPartner}
-                    onChange={(e) => handleFormChange('businessPartner', e.target.value)}
-                    placeholder="Nhập tên nhà cung cấp"
-                    className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                    onChange={(e) => {
+                      checkSpecialChar(e);
+                      const value = e.target.value;
+                      handleFormChange('businessPartner', value);
+
+                    }}
+                    error={!!errors.businessPartner}
+                    helperText={errors.businessPartner}
+                    placeholder="Nhập họ và tên khách hàng"
+                    id='field-customer-name'
+                    className="w-4/5 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    size="small" />
                 </div>
 
                 <div className="flex items-center">
                   <p className="w-1/5">Địa chỉ:</p>
-                  <input
+                  <TextField
                     type="text"
                     value={data.address}
-                    onChange={(e) => handleFormChange('address', e.target.value)}
+                    onChange={(e) => {
+                      checkSpecialCharForAddress(e);
+                      const value = e.target.value;
+                      handleFormChange('address', value);
+                    }}
+                    error={!!errors.address}
+                    helperText={errors.address}
                     placeholder="Nhập địa chỉ"
+                    id="field-address"
                     className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    size="small"
                   />
                 </div>
 
                 <div className="flex items-center">
                   <p className="w-1/5">Theo phiếu yêu cầu số:</p>
-                  <input
-                    type="text"
+                  <select
+                    id="select-transaction-request"
                     value={data.transactionRequestId}
                     onChange={(e) => handleFormChange('transactionRequestId', e.target.value)}
-                    placeholder="Nhập số phiếu yêu cầu"
                     className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="" disabled>Chọn phiếu yêu cầu</option>
+                    {listRequest.map((request) => (
+                      <option key={request.transactionRequestId} value={request.transactionRequestId}>
+                        {request.transactionRequestCode}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+                {errors.transactionRequestId && (
+                  <p id='error-transaction-request' className="ml-[200px] text-red-500  text-xs">{errors.transactionRequestId}</p>
+                )}
               </div>
               <div>
-                <table className="mt-3 w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 border-collapse border border-gray-200">
+                <table id='table-transaction-item' className="mt-3 w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 border-collapse border border-gray-200">
                   <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                       <th scope="col" className="px-6 py-3 border border-gray-300">
@@ -188,128 +332,218 @@ const AddImportModal = ({ isOpen, onClose }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row, index) => (
-                      <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    {rows?.map((row, index) => (
+                      <tr key={index}
+                        index={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                         <td className="px-6 py-4 border border-gray-300">{index + 1}</td>
+
                         <td className="px-6 py-4 border border-gray-300">
-                          <Select
-                            value={row.bookName}
-                            onChange={(e) => handleRowChange(index, 'bookId', e.target.value)}
-                            displayEmpty
-                            fullWidth
-                            className="w-full border rounded py-2 h-10"
-                          >
-                            <MenuItem value="" disabled>Chọn sách</MenuItem>
-                            {books.map((book, i) => (
-                              <MenuItem key={i} value={book.bookId}>{book.bookName}</MenuItem>
-                            ))}
-                          </Select>
+                          {row.bookId ? (
+                            <span className="block">{books.find((book) => book.bookId === row.bookId)?.bookName}</span>
+                          ) : (
+                            <select
+                              value={row.bookId || ''}
+                              onChange={(e) => handleRowChange(index, 'bookId', e.target.value)}
+                              className="w-full border rounded py-2 h-10"
+                            >
+                              <option value="" disabled>Chọn sách</option>
+                              {books.map((book, i) => (
+                                <option key={i} value={book.bookId}>
+                                  {book.bookName}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </td>
+
+
                         <td className="px-6 py-4 border border-gray-300">Quyển</td>
                         <td className="px-6 py-4 border border-gray-300">
                           <input
                             type="number"
-                            value={row.requestQuantity}
-                            onChange={(e) => handleRowChange(index, 'requestQuantity', e.target.value)}
+                            value={row?.requestQuantity || ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value > 0) {
+                                handleRowChange(index, 'requestQuantity', value);
+                              }
+                            }}
+                            id='field-rest-quantity'
                             className="w-full rounded py-2 h-8 border-none"
+                            style={{ textAlign: 'center', verticalAlign: 'middle' }}
                           />
                         </td>
                         <td className="px-6 py-4 border border-gray-300">
-                          <input
+                          <TextField
                             type="number"
-                            value={row.actualQuantity}
-                            onChange={(e) => handleRowChange(index, 'actualQuantity', e.target.value)}
+                            value={row.actualQuantity || ''}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value, 10);
+                              if (value > 0) {
+                                handleRowChange(index, 'actualQuantity', value);
+                              } else if (value < 0) {
+                                handleRowChange(index, 'actualQuantity', Math.abs(value));
+                              }
+                            }}
+                            onPaste={(e) => {
+                              e.preventDefault();
+                              const pasteValue = e.clipboardData.getData('Text');
+                              const sanitizedValue = pasteValue.replace(/[^0-9]/g, '');
+
+                              if (sanitizedValue) {
+                                handleRowChange(index, 'actualQuantity', parseInt(sanitizedValue, 10));
+                              }
+                            }}
+                            id="field-actual-quantity"
                             className="w-full rounded py-2 h-8 border-none"
+                            style={{ textAlign: 'center', verticalAlign: 'middle' }}
+                            size="small"
+                            error={!!errors[`actualQuantity-${index}`]}
+                            helperText={errors[`actualQuantity-${index}`] || ''}
                           />
                         </td>
+
+
                         <td className="px-6 py-4 border border-gray-300">
-                          <input
+                          <TextField
                             type="number"
-                            value={row.price}
-                            onChange={(e) => handleRowChange(index, 'price', e.target.value)}
+                            size='small'
+                            value={row.price || ''}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value, 10);
+                              if (value > 0) {
+                                handleRowChange(index, 'price', value);
+                              } else if (value < 0) {
+                                handleRowChange(index, 'price', Math.abs(value));
+                              }
+                            }}
+                            onPaste={(e) => {
+                              e.preventDefault();
+                              const pasteValue = e.clipboardData.getData('Text');
+                              const sanitizedValue = pasteValue.replace(/[^0-9]/g, '');
+
+                              if (sanitizedValue) {
+                                handleRowChange(index, 'price', parseInt(sanitizedValue, 10));
+                              }
+                            }}
+                            id='field-price'
                             className="w-full rounded py-2 h-8 border-none"
+                            error={!!errors[`price-${index}`]}
+                            helperText={errors[`price-${index}`] || ''}
                           />
                         </td>
                         <td className="px-6 py-4 border border-gray-300">
-                          <input
+                          <TextField
                             type="text"
-                            value={row.note}
+                            value={row.note || ''}
                             onChange={(e) => handleRowChange(index, 'note', e.target.value)}
+                            id='field-note'
                             className="w-full rounded py-2 h-8 border-none"
+                            error={!!errors[`note-${index}`]}
+                            helperText={errors[`note-${index}`] || ''}
+                            size='small'
                           />
                         </td>
                         <td className="px-6 py-4 border border-gray-300">
                           <input
                             type="text"
-                            value={row.actualQuantity * row.price}
+                            id='field-total-price'
+                            value={(row.actualQuantity * row.price) || 0}
                             className="w-full rounded py-2 h-8 border-none"
+                            readOnly
                           />
                         </td>
                         <td className="px-6 py-4 border border-gray-300">
                           <IconButton
-                            onClick={() => handleDeleteRow(index)}
-                            sx={{ color: 'red' }}
-                          >
+                            id="icon-delete"
+                            onClick={() => openConfirmModal(index)} sx={{ color: 'red' }}>
                             <DeleteIcon />
                           </IconButton>
+
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                <div className="mb-4">
-                  <p className="font-bold">Tổng tiền: {data.totalValue.toLocaleString()} VND</p>
-                </div>
 
                 <div className="flex justify-center mb-5">
-                  <IconButton onClick={handleAddRow} color="primary">
+                  <IconButton id='icon-add-row' onClick={handleAddRow} color="primary">
                     <AddIcon />
                   </IconButton>
                 </div>
 
-                <div className="flex justify-between mb-20">
-                  <div>
-                    <p className='font-bold'>Người nhận hàng</p>
-                    <p className='italic text-center'>(Ký họ tên)</p>
-                  </div>
-                  <div>
-                    <p className='font-bold'>Thủ kho</p>
-                    <p className='italic text-center'>(Ký họ tên)</p>
-                  </div>
-                  <div >
-                    <p className='font-bold'>Người lập phiếu</p>
-                    <p className='italic text-center'>(Ký họ tên)</p>
-                  </div>
-                  <div className=''>
-                    <p className='font-bold'>Giám đốc</p>
-                    <p className='italic text-center'>(Ký họ tên)</p>
-                  </div>
+                <div className="mb-4">
+                  <p id='txt-total-amount' className="font-bold">Tổng tiền: {data.totalValue.toLocaleString()} VND</p>
                 </div>
+
+                {errorMessage && (
+                  <div
+                    className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mt-4"
+                    role="alert"
+                  >
+                    <p className="font-bold">Lỗi</p>
+                    <p>{errorMessage}</p>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+            <div className="flex justify-end items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
               <button
+                id='btn-save'
                 type="submit"
                 className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
                 Lưu
               </button>
               <button
+                id="btn-cancel"
                 type="button"
                 onClick={onClose}
                 className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600"
               >
-                Hủy
+                Đóng
               </button>
             </div>
           </form>
         </div>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        >
+          <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+        {isConfirmModalOpen && (
+          <div className="fixed z-50 inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+            <div className="bg-white p-6 rounded-md shadow-md w-96">
+              <h3 className="text-lg font-semibold mb-4">Xác nhận xóa dòng</h3>
+              <p>Bạn có chắc bạn muốn xóa thông tin của sản phẩm này?</p>
+              <div className="mt-6 flex justify-end">
+                <button
+                  id='btn-cancel-confirm'
+                  onClick={closeConfirmModal}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-gray-800 mr-2"
+                >
+                  Hủy
+                </button>
+                <button
+                  id='btn-confirm'
+                  onClick={handleDeleteRow}
+                  className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 text-white"
+                >
+                  Đồng ý
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Dialog>
   )
-}
-
-  ;
+};
 
 
 const Export = () => {
@@ -320,8 +554,11 @@ const Export = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(5);
   const type = 'Xuất';
+  const role = localStorage.getItem("role")
+
 
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
@@ -331,22 +568,27 @@ const Export = () => {
   };
 
   const transactions = useSelector((state) => state.transaction.transactions.data || []);
-  console.log('Danh sách phiếu xuất ', transactions);
-
 
   useEffect(() => {
     dispatch(getAllTransaction(type));
   }, [dispatch]);
-  
+
+  const formatDate = (dateString) => {
+    if (!dateString || isNaN(new Date(dateString))) return 'N/A';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const filteredTransactions = transactions.filter(transaction => {
     const transactionDate = new Date(transaction.createAt);
-    const transactionId = transaction.transactionId?.toString() || ''; 
-    const billCode = transaction.bill?.billCode?.toLowerCase() || ''; 
-    const supplierName = transaction?.businessPartner.toLowerCase() || ''; 
+    const transactionId = transaction.transactionId?.toString() || '';
+    const billCode = transaction.bill?.billCode?.toLowerCase() || '';
+    const supplierName = transaction?.businessPartner.toLowerCase() || '';
     const createBy = transaction.staff.staffName.toLowerCase() || '';
-    const transactionRequestId = transaction.transactionRequest?.transactionRequestId.toString() || ''; 
-    
-
+    const transactionRequestId = transaction.transactionRequest?.transactionRequestId.toString() || '';
 
     return (
       (!startDate || transactionDate >= startDate) &&
@@ -355,11 +597,20 @@ const Export = () => {
         transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         billCode.includes(searchTerm.toLowerCase()) ||
         supplierName.includes(searchTerm.toLowerCase()) ||
-        createBy.includes(searchTerm.toLowerCase()) || 
+        createBy.includes(searchTerm.toLowerCase()) ||
         transactionRequestId.includes(searchTerm.toLowerCase())
       )
     );
   });
+
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
 
   return (
     <div>
@@ -367,7 +618,6 @@ const Export = () => {
         <div className='font-bold text-3xl p-3 ml-5'>Quản lý phiếu xuất</div>
 
         <div className="mr-5 p-5 flex justify-between items-center" style={{ float: 'right', width: '100%' }}>
-          {/* Phần tử Date Range Picker nằm ở đầu */}
           <div className="flex items-center pl-5">
             <div className="flex items-center">
               {/* DatePicker for Start Date */}
@@ -384,14 +634,13 @@ const Export = () => {
                   selectsStart
                   startDate={startDate}
                   endDate={endDate}
-                  placeholderText="Select date start"
+                  placeholderText="Chọn ngày bắt đầu"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
               </div>
 
-              <span className="mx-4 text-gray-500">to</span>
+              <span className="mx-4 text-gray-500">đến</span>
 
-              {/* DatePicker for End Date */}
               <div className="relative">
                 <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-10">
                   <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
@@ -404,7 +653,7 @@ const Export = () => {
                   selectsEnd
                   startDate={startDate}
                   endDate={endDate}
-                  placeholderText="Select date end"
+                  placeholderText="Chọn ngày kết thúc"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
 
@@ -412,7 +661,6 @@ const Export = () => {
             </div>
           </div>
 
-          {/* Phần tử Tìm kiếm và Nút thêm nằm ở cuối */}
           <div className="flex items-center">
             <div className="relative">
               <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
@@ -440,12 +688,18 @@ const Export = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="ml-2">
-              <button className="bg-indigo-600 text-white p-2 rounded-md flex items-center" onClick={() => setIsAddModalOpen(true)}>
-                <LuPlus />
-                <p className="pl-1">Thêm</p>
-              </button>
-            </div>
+            {role === 'Warehousekeeper' && (
+              <div className="ml-2">
+                <button
+                  className="bg-indigo-600 text-white p-2 rounded-md flex items-center"
+                  onClick={() => setIsAddModalOpen(true)}
+                >
+                  <LuPlus />
+                  <p className="pl-1">Thêm</p>
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -478,13 +732,13 @@ const Export = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.map((transaction, index) => (
+              {paginatedTransactions?.map((transaction, index) => (
                 <tr key={transaction.id} className="bg-white border-b">
-                  <td className="px-6 py-4">{index + 1}</td>
-                  <td className="px-6 py-4">{transaction.transactionId}</td>
-                  <td className="px-6 py-4">{transaction.transactionRequest.transactionRequestId}</td>
+                  <td className="px-6 py-4">{(currentPage - 1) * pageSize + index + 1}</td>
+                  <td className="px-6 py-4">{transaction.transactionCode}</td>
+                  <td className="px-6 py-4">{transaction.transactionRequest?.transactionRequestCode}</td>
                   <td className="px-6 py-4">{transaction.businessPartner}</td>
-                  <td className="px-6 py-4">{transaction.createAt}</td>
+                  <td className="px-6 py-4">{formatDate(transaction.createAt)}</td>
                   <td className="px-6 py-4">{transaction?.staff?.staffName}</td>
 
                   <td className="px-6 py-4">
@@ -498,13 +752,6 @@ const Export = () => {
                           </button>
                         </div>
 
-                        <div>
-                          <button className="flex p-1 bg-red-500 rounded-xl hover:rounded-3xl hover:bg-red-600 transition-all duration-300 text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
                       </div>
                     </td>
                   </td>
@@ -513,13 +760,31 @@ const Export = () => {
             </tbody>
           </table>
         </div>
-
       </div>
-      <AddImportModal
+      <div className='flex justify-center fixed bottom-0 left-0 w-full bg-white shadow-md'>
+        <Stack spacing={2}>
+          <Pagination
+            count={Math.ceil(filteredTransactions.length / pageSize)}
+            page={currentPage}
+            onChange={handlePageChange}
+            shape="rounded"
+          />
+        </Stack>
+      </div>
+      <AddExportModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false)
+          dispatch(getAllTransaction(type));
+        }}
+        onSuccess={() => dispatch(getAllTransaction())}
+
       />
-      <EditTransaction isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} transaction={selectedTransaction} />
+      <EditTransaction isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        transaction={selectedTransaction}
+        onSuccess={() => dispatch(getAllTransaction())}
+      />
 
     </div>
   )

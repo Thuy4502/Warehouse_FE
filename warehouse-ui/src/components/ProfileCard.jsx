@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import { getUser } from '../State/Auth/Action'; 
+import { getUser } from '../State/Auth/Action';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateStaff } from '../State/Staff/Action';
 import { uploadBytes } from 'firebase/storage';
@@ -9,128 +9,126 @@ import { uploadStaffImageToFirebase, uploadStaffImageToFirebaseExcel } from '../
 
 const ProfileCard = () => {
     const dispatch = useDispatch();
-const token = localStorage.getItem("token");
-const userInfor = useSelector((state) => state.auth.user);
-const [selectedFile, setSelectedFile] = useState(null);
-const [previewUrl, setPreviewUrl] = useState(userInfor?.data?.img || 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg');
+    const token = localStorage.getItem("token");
+    const userInfor = useSelector((state) => state.auth.user);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(userInfor?.data?.img || 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg');
 
-const [formData, setFormData] = useState({
-    staffName: '',
-    email: '',
-    phone_number: '',
-    address: '',
-    dob: '',
-    img: '',
-    isEnable: '',
-});
-
-
-
-
-const [openSnackbar, setOpenSnackbar] = useState(false);
-const [snackbarMessage, setSnackbarMessage] = useState('');
-const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-const [loading, setLoading] = useState(true);
-
-useEffect(() => {
-    if (token) {
-        dispatch(getUser(token))
-            .then(() => setLoading(false))
-            .catch(() => setLoading(false));
-    }
-}, [dispatch, token]);
-
-const formatDateToInput = (dateString) => {
-    const date = new Date(dateString);
-    if (!isNaN(date)) {
-        return date.toISOString().split('T')[0]; 
-    }
-    return '';
-};
-
-const formatDateToDisplay = (dateString) => {
-    const date = new Date(dateString);
-    if (!isNaN(date)) {
-        return date.toLocaleDateString('vi-VN'); 
-    }
-    return '';
-};
-
-useEffect(() => {
-    if (userInfor) {
-        setFormData({
-            staffName: userInfor.data?.staffName || '',
-            email: userInfor.data?.email || '',
-            phone_number: userInfor.data?.phone_number || '',
-            address: userInfor.data?.address || '',
-            dob: userInfor.data?.dob ? formatDateToInput(userInfor.data.dob) : '',
-            img: userInfor.data?.img || '',
-            isEnable: userInfor.data?.isEnable || '',
-
-        });
-        setPreviewUrl(userInfor.data?.img || 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg');
-    }
-}, [userInfor]);
-
-
-
-
-const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData({
-        ...formData,
-        [id]: value
+    const [formData, setFormData] = useState({
+        staffName: '',
+        email: '',
+        phoneNumber: '',
+        address: '',
+        dob: '',
+        img: '',
+        isEnable: '',
     });
-};
 
 
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+    const [loading, setLoading] = useState(true);
 
-const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        setSelectedFile(file); 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setPreviewUrl(reader.result); 
-        };
-        reader.readAsDataURL(file);
-    }
-};
-
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-        let imageUrl = formData.img;  
-        if (selectedFile) {
-            imageUrl = await uploadStaffImageToFirebase(selectedFile); // Tải lên Firebase và nhận URL
-            setFormData((prevData) => ({
-                ...prevData,
-                img: imageUrl,  // Lưu URL vào formData
-            }));
+    useEffect(() => {
+        if (token) {
+            dispatch(getUser(token))
+                .then(() => setLoading(false))
+                .catch(() => setLoading(false));
         }
-        await dispatch(updateStaff(userInfor?.data.staffId, { ...formData, img: imageUrl }));
-        setSnackbarMessage('Profile updated successfully!');
-        setSnackbarSeverity('success');
-    } catch (error) {
-        console.error("Error updating profile:", error);
-        setSnackbarMessage('Failed to update profile. Please try again.');
-        setSnackbarSeverity('error');
-    } finally {
-        setOpenSnackbar(true);
+    }, [dispatch, token]);
+
+    const formatDateToInput = (dateString) => {
+        const date = new Date(dateString);
+        if (!isNaN(date)) {
+            return date.toISOString().split('T')[0];
+        }
+        return '';
+    };
+
+    const formatDateToDisplay = (dateString) => {
+        const date = new Date(dateString);
+        if (!isNaN(date)) {
+            return date.toLocaleDateString('vi-VN');
+        }
+        return '';
+    };
+
+    useEffect(() => {
+        if (userInfor) {
+            setFormData({
+                staffName: userInfor.data?.staffName || '',
+                email: userInfor.data?.email || '',
+                phoneNumber: userInfor.data?.phoneNumber || '',
+                address: userInfor.data?.address || '',
+                dob: userInfor.data?.dob ? formatDateToInput(userInfor.data.dob) : '',
+                img: userInfor.data?.img || '',
+                isEnable: userInfor.data?.isEnable || '',
+
+            });
+            setPreviewUrl(userInfor.data?.img || 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg');
+        }
+    }, [userInfor]);
+
+
+
+
+    const handleChange = (e) => {
+        const { id, value } = e.target;
+        setFormData({
+            ...formData,
+            [id]: value
+        });
+    };
+
+
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            let imageUrl = formData.img;
+            if (selectedFile) {
+                imageUrl = await uploadStaffImageToFirebase(selectedFile);
+                setFormData((prevData) => ({
+                    ...prevData,
+                    img: imageUrl,
+                }));
+            }
+            await dispatch(updateStaff(userInfor?.data.staffId, { ...formData, img: imageUrl }));
+            setSnackbarMessage('Profile updated successfully!');
+            setSnackbarSeverity('success');
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            setSnackbarMessage('Failed to update profile. Please try again.');
+            setSnackbarSeverity('error');
+        } finally {
+            setOpenSnackbar(true);
+        }
+    };
+
+
+    const handleCloseSnackbar = () => {
+        setOpenSnackbar(false);
+    };
+
+    console.log("Thông tin nhân viên  ", userInfor)
+    console.log("Dữ liệu gửi đi ", formData)
+
+    if (loading) {
+        return <div>Loading...</div>;
     }
-};
-
-
-const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-};
-
-console.log("Thông tin nhân viên  ", userInfor)
-console.log("Dữ liệu gửi đi ", formData)
-
-if (loading) {
-    return <div>Loading...</div>;
-}
     return (
         <div>
             <div className="w-full px-4 pb-8 mt-8 sm:max-w-xl shadow-md rounded-lg bg-white p-3">
@@ -139,9 +137,10 @@ if (loading) {
                     <div className="flex flex-col items-center space-y-5 sm:flex-row sm:space-y-0">
                         <img
                             className="object-cover w-40 h-40 p-1 rounded-full ring-2 ring-indigo-300 dark:ring-indigo-500"
-                            src={formData.img}
+                            src={previewUrl} 
                             alt="Avatar"
                         />
+
                         <div className="flex flex-col space-y-5 sm:ml-8">
                             <input
                                 type="file"
@@ -198,17 +197,17 @@ if (loading) {
 
                         <div className="mb-2 sm:mb-6">
                             <label
-                                htmlFor="phone_number"
+                                htmlFor="phoneNumber"
                                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                             >
                                 Phone number
                             </label>
                             <input
                                 type="text"
-                                id="phone_number"
+                                id="phoneNumber"
                                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2"
                                 placeholder="Phone number"
-                                value={formData.phone_number}
+                                value={formData.phoneNumber}
                                 onChange={handleChange}
                                 required
                             />

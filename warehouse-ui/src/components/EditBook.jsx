@@ -5,9 +5,9 @@ import { getAllAuthors } from '../State/Author/Action';
 import { getAllPublisher } from '../State/Publisher/Action';
 import { Checkbox, FormControl, MenuItem, Select, Button, CircularProgress } from '@mui/material';
 import { uploadImageToFirebase } from '../config/FirebaseConfig';
-import { findBookById, updateBook } from '../State/Book/Action';
+import { findBookById, getAllBooks, updateBook } from '../State/Book/Action';
 
-const EditBook = ({ closeEditModal, bookId }) => {
+const EditBook = ({ closeEditModal, bookId, onSuccess }) => {
     const defaultImage = 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg';
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(defaultImage);
@@ -31,14 +31,15 @@ const EditBook = ({ closeEditModal, bookId }) => {
         image: '',
         language: '',
         numberOfPage: '',
+        isbn: '',
         price: '',
         publicationYear: '',
         quantity: '',
         status: '',
         title: '',
-        authorId: [],
+        authorIds: [],
         publisherId: '',
-        categoryId: '',
+        categoryIds: [],
     });
 
     useEffect(() => {
@@ -55,9 +56,10 @@ const EditBook = ({ closeEditModal, bookId }) => {
                 ...book,
                 image: book.image || defaultImage,
                 publisherId: book.publisher?.publisherId || '',
-                authorId: book.authors ? book.authors.map(author => author.authorId) : [],
-                categoryId: book.category ? book.category.categoryId : '',
+                authorIds: book.authors ? book.authors.map(author => author.authorId) : [],
+                categoryIds: book.categoryBooks ? book.categoryBooks.map(cb => cb.category.categoryId) : [],
                 language: book.language || '',
+                isbn: book.isbn || ''
             }));
             setPreviewUrl(book.image || defaultImage);
         }
@@ -82,9 +84,13 @@ const EditBook = ({ closeEditModal, bookId }) => {
     };
 
     const handleMultiSelectChange = (event) => {
-        const value = event.target.value;
-        setBookData((prevData) => ({ ...prevData, authorId: value }));
+        const { name, value } = event.target; 
+        setBookData((prevData) => ({
+            ...prevData,
+            [name]: value, 
+        }));
     };
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -99,15 +105,18 @@ const EditBook = ({ closeEditModal, bookId }) => {
                 bookData.image = imageUrl;
             }
 
-            dispatch(updateBook(bookId, bookData))
-
+            await dispatch(updateBook(bookId, bookData))
+            onSuccess();
         } catch (error) {
             console.error("Error updating book:", error);
             setError('Error updating book. Please try again.');
         } finally {
             setLoading(false);
         }
+        closeEditModal()
     };
+
+    console.log("Cuốn sách đang được chỉnh sửa: ", book)
 
     return (
         <div>
@@ -135,7 +144,7 @@ const EditBook = ({ closeEditModal, bookId }) => {
                                         d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
                                     />
                                 </svg>
-                                <span className="sr-only">Close modal</span>
+                                <span className="sr-only">Đóng</span>
                             </button>
                         </div>
                         <div className="p-6 space-y-6">
@@ -171,8 +180,8 @@ const EditBook = ({ closeEditModal, bookId }) => {
                                     </label>
                                     <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
                                         <Select
-                                            name="authorId"
-                                            value={bookData.authorId}
+                                            name="authorIds"
+                                            value={bookData.authorIds} // Sử dụng authorIds ở đây
                                             onChange={handleMultiSelectChange}
                                             multiple
                                             sx={{
@@ -186,16 +195,17 @@ const EditBook = ({ closeEditModal, bookId }) => {
                                             renderValue={(selected) =>
                                                 selected
                                                     .map((id) => AUTHORS.find((author) => author.authorId === id)?.authorName)
-                                                    .join(', ')
+                                                    .join(', ') // Hiển thị tên tác giả đã chọn
                                             }
                                         >
                                             {AUTHORS.map((author) => (
                                                 <MenuItem key={author.authorId} value={author.authorId}>
-                                                    <Checkbox checked={(bookData.authorId || []).indexOf(author.authorId) > -1} />
+                                                    <Checkbox checked={bookData.authorIds.indexOf(author.authorId) > -1} />
                                                     {author.authorName}
                                                 </MenuItem>
                                             ))}
                                         </Select>
+
                                     </FormControl>
                                 </div>
 
@@ -232,9 +242,10 @@ const EditBook = ({ closeEditModal, bookId }) => {
                                     </label>
                                     <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
                                         <Select
-                                            name="categoryId"
-                                            value={bookData.categoryId}
-                                            onChange={handleInputChange}
+                                            name="categoryIds"
+                                            value={bookData.categoryIds}
+                                            onChange={handleMultiSelectChange}
+                                            multiple
                                             sx={{
                                                 fontSize: '0.875rem',
                                                 padding: '10px 14px',
@@ -243,9 +254,15 @@ const EditBook = ({ closeEditModal, bookId }) => {
                                                 backgroundColor: 'rgb(249 250 251)',
                                                 border: '1px solid rgb(209 213 219)',
                                             }}
+                                            renderValue={(selected) =>
+                                                selected
+                                                    .map((id) => CATEGORYS.find((category) => category.categoryId === id)?.categoryName)
+                                                    .join(', ')
+                                            }
                                         >
                                             {CATEGORYS.map((category) => (
                                                 <MenuItem key={category.categoryId} value={category.categoryId}>
+                                                    <Checkbox checked={bookData.categoryIds.includes(category.categoryId)} />
                                                     {category.categoryName}
                                                 </MenuItem>
                                             ))}
@@ -268,8 +285,22 @@ const EditBook = ({ closeEditModal, bookId }) => {
                                         required
                                     />
                                 </div>
-
                                 <div className="col-span-6 sm:col-span-3">
+                                    <label htmlFor="publicationYear" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        isbn
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="isbn"
+                                        id="isbn"
+                                        className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        value={bookData.isbn}
+                                        onChange={handleInputChange}
+                                        placeholder=""
+                                        required
+                                    />
+                                </div>
+                                {/* <div className="col-span-6 sm:col-span-3">
                                     <label htmlFor="edition" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                         Phiên bản
                                     </label>
@@ -283,7 +314,7 @@ const EditBook = ({ closeEditModal, bookId }) => {
                                         placeholder=""
                                         required
                                     />
-                                </div>
+                                </div> */}
 
                                 <div className="col-span-6 sm:col-span-3">
                                     <label htmlFor="publicationYear" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -361,21 +392,29 @@ const EditBook = ({ closeEditModal, bookId }) => {
                                         className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                     >
                                         <option value="ACTIVE">Còn hàng</option>
-                                        <option value="DISCONTINUED">Ngừng cung cấp</option>
+                                        <option value="INACTIVE">Ngừng cung cấp</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center justify-end p-6 border-t border-gray-200 rounded-b">
-                            <Button
+                            <button
+                                type="button"
+                                className="text-gray-500 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm px-4 py-2 mr-2 border border-blue-600"
+                                onClick={closeEditModal}
+                            >
+                                Hủy
+                            </button>
+                            <button
                                 type="submit"
                                 onClick={handleSubmit}
-                                className="text-white rounded-lg bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium  text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                                className="text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800"
                             >
                                 Cập nhật
-                            </Button>
+                            </button>
+
                         </div>
-                       
+
                     </form>
                 </div>
             </div>

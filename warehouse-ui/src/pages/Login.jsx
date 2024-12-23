@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login, getUser } from '../State/Auth/Action';
+import { Grid } from '@mui/material';
 
 const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
-
+    const error = useSelector((state) => state.auth.error); 
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -19,14 +20,14 @@ const Login = () => {
 
         dispatch(login(userData))
             .then(() => {
-                const newToken = localStorage.getItem("token");
+                const newToken = localStorage.getItem("token"); 
                 if (newToken) {
-                    dispatch(getUser(newToken))
+                    dispatch(getUser(newToken)) 
                         .then(() => {
                             const userRole = localStorage.getItem("role");
-                            console.log("Đây là role sau khi đăng nhập: " + userRole);
                             if (userRole) {
-                                navigate("/");
+                                console.log("Đây là role sau khi đăng nhập: " + userRole);
+                                navigate("/"); 
                             }
                         })
                         .catch((error) => {
@@ -53,14 +54,14 @@ const Login = () => {
             <div className="w-full max-w-md space-y-8 bg-white p-10 rounded-lg shadow-lg opacity-80">
                 <div className="sm:mx-auto sm:w-full sm:max-w-sm">
                     <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-                        Sign in to your account
+                        Đăng nhập tài khoản của bạn
                     </h2>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="username" className="block text-sm font-medium leading-6 text-gray-900">
-                            Username
+                            Tên tài khoản
                         </label>
                         <div className="mt-2">
                             <input
@@ -77,11 +78,11 @@ const Login = () => {
                     <div>
                         <div className="flex items-center justify-between">
                             <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-                                Password
+                                Mật khẩu
                             </label>
                             <div className="text-sm">
-                                <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
-                                    Forgot password?
+                                <a onClick={() => navigate('/forgot-password')} className="font-semibold text-indigo-600 hover:text-indigo-500">
+                                    Quên mật khẩu?
                                 </a>
                             </div>
                         </div>
@@ -97,12 +98,19 @@ const Login = () => {
                         </div>
                     </div>
 
+                    <Grid item xs={12}>
+                        {error && (
+                            <p id="error" className='text-red-500 ml-1 mt-2'>{error}</p> 
+                        )}
+                    </Grid>
+
                     <div>
                         <button
                             type="submit"
+                            id='btn-login'
                             className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                         >
-                            Sign in
+                            Đăng nhập
                         </button>
                     </div>
                 </form>

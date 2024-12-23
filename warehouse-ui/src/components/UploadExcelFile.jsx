@@ -41,17 +41,18 @@ const UploadExcelFile = ({ open, onClose }) => {
 
             const bookData = {
                 bookName: row.getCell('A').value,
-                image: orderedImageUrls[rowNumber - 1] || null, 
+                image: orderedImageUrls[rowNumber - 1] || null,
                 edition: row.getCell('C').value,
                 language: row.getCell('D').value,
                 numberOfPage: row.getCell('E').value,
                 publicationYear: row.getCell('F').value,
                 quantity: row.getCell('G').value,
                 title: row.getCell('H').value,
-                categoryName: row.getCell('I').value,
+                categoryNames: [row.getCell('I').value],
                 publisherName: row.getCell('J').value,
                 authorName: [row.getCell('K').value],
-                price: row.getCell('L').value
+                price: row.getCell('L').value,
+                isbn: row.getCell('M').value,
             };
 
             if (bookData.bookName && bookData.title && bookData.publicationYear) {
@@ -110,12 +111,17 @@ const UploadExcelFile = ({ open, onClose }) => {
                     {excelData ? (
                         <table className='table-auto border-collapse border border-gray-300 w-full'>
                             <thead>
-                                <tr className='bg-gray-100'>
-                                    {Object.keys(excelData[0]).map((key) => (
-                                        <th key={key} className='border border-gray-300 px-4 py-2'>{key}</th>
-                                    ))}
+                                <tr className="bg-gray-100">
+                                    {excelData && excelData.length > 0 ? (
+                                        Object.keys(excelData[0]).map((key) => (
+                                            <th key={key} className="border border-gray-300 px-4 py-2">{key}</th>
+                                        ))
+                                    ) : (
+                                        <th className="border border-gray-300 px-4 py-2">No Data</th>
+                                    )}
                                 </tr>
                             </thead>
+
                             <tbody>
                                 {excelData.map((row, index) => (
                                     <tr key={index}>

@@ -38,28 +38,28 @@ const AddStaff = ({ open, onClose }) => {
         }
 
         worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
-          if (rowNumber === 1) return; 
-      
-          const emailCell = row.getCell('E').value;
-          const email = emailCell && emailCell.hyperlink ? emailCell.text : emailCell; 
-      
-          const staffData = {
-              username: row.getCell('A').value,
-              roleName: row.getCell('B').value,
-              staffName: row.getCell('C').value,
-              phoneNumber: row.getCell('D').value,
-              email: email, 
-              picture: orderedImageUrls[rowNumber - 1] || null,
-              address: row.getCell('G').value,
-              dob: row.getCell('H').value,
-              
-          };
-      
-          if (staffData.username && staffData.roleName && staffData.staffName) {
-              staffDataArray.push(staffData);
-          }
-      });
-      
+            if (rowNumber === 1) return;
+
+            const emailCell = row.getCell('E').value;
+            const email = emailCell && emailCell.hyperlink ? emailCell.text : emailCell;
+
+            const staffData = {
+                username: row.getCell('A').value,
+                roleName: row.getCell('B').value,
+                staffName: row.getCell('C').value,
+                phoneNumber: row.getCell('D').value,
+                email: email,
+                picture: orderedImageUrls[rowNumber - 1] || null,
+                address: row.getCell('G').value,
+                dob: row.getCell('H').value,
+
+            };
+
+            if (staffData.username && staffData.roleName && staffData.staffName) {
+                staffDataArray.push(staffData);
+            }
+        });
+
         setExcelData(staffDataArray.slice(0, 10));
         console.log("Data to send:", staffDataArray);
     };
@@ -111,12 +111,17 @@ const AddStaff = ({ open, onClose }) => {
                     {excelData ? (
                         <table className='table-auto border-collapse border border-gray-300 w-full'>
                             <thead>
-                                <tr className='bg-gray-100'>
-                                    {Object.keys(excelData[0]).map((key) => (
-                                        <th key={key} className='border border-gray-300 px-4 py-2'>{key}</th>
-                                    ))}
+                                <tr className="bg-gray-100">
+                                    {excelData && excelData.length > 0 ? (
+                                        Object.keys(excelData[0]).map((key) => (
+                                            <th key={key} className="border border-gray-300 px-4 py-2">{key}</th>
+                                        ))
+                                    ) : (
+                                        <th className="border border-gray-300 px-4 py-2">No Data</th>
+                                    )}
                                 </tr>
                             </thead>
+
                             <tbody>
                                 {excelData.map((row, index) => (
                                     <tr key={index}>

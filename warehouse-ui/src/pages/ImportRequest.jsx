@@ -3,14 +3,17 @@ import { LuPlus } from "react-icons/lu";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useDispatch, useSelector } from 'react-redux';
-import { Dialog, Select, MenuItem, IconButton } from '@mui/material';
+import { Dialog, Select, MenuItem, IconButton, Snackbar, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getAllBooks } from '../State/Book/Action';
 import { addTransactionRequest, getAllTransactionRequest } from '../State/TransactionRequest/Action';
 import EditTransactionRequest from '../components/EditTransactionRequest';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
-const AddImportRequestModal = ({ isOpen, onClose }) => {
+
+const AddImportRequestModal = ({ isOpen, onClose, onSuccess }) => {
     const books = useSelector((state) => state.book.books.data || []);
     const dispatch = useDispatch();
     const staff = localStorage.getItem("staffId")
@@ -24,19 +27,40 @@ const AddImportRequestModal = ({ isOpen, onClose }) => {
         transactionRequestItems: [],
         staffId: staff,
         totalValue: 0,
+        type: "Nhập"
 
     })
 
-    console.log("Dữ liệu gửi đi ", data)
 
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+    const transactionRequests = useSelector((state) => state.transactionRequest.transactionRequests.data || []);
 
     const handleSave = (event) => {
         event.preventDefault();
-        dispatch(addTransactionRequest(data));
+        try {
+            dispatch(addTransactionRequest(data));
+            dispatch(getAllTransactionRequest("Nhập"));
+            onSuccess();
+            setSnackbarMessage('Tạo phiếu yêu cầu nhập thành công!');
+            setSnackbarSeverity('success');
+            setOpenSnackbar(true);
+            onClose();
+        } catch (error) {
+            setSnackbarMessage('Lỗi khi tạo phiếu yêu cầu!');
+            setSnackbarSeverity('error');
+            setOpenSnackbar(true);
+        }
+    };
+
+    const handleCloseSnackbar = () => {
+        setOpenSnackbar(false);
     };
 
     useEffect(() => {
         dispatch(getAllBooks());
+        dispatch(getAllTransactionRequest("Nhập"));
     }, [dispatch]);
 
 
@@ -78,7 +102,6 @@ const AddImportRequestModal = ({ isOpen, onClose }) => {
         setData({ ...data, [field]: value });
     };
 
-
     return (
         <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
             <div
@@ -92,7 +115,7 @@ const AddImportRequestModal = ({ isOpen, onClose }) => {
                         <div className='px-3 pt-3'>
                             <div className='flex justify-between'>
                                 <div>
-                                    <h4>CÔNG TY CỔ PHẦN ĐẦU TƯ VÀ CÔNG NGHỆ X</h4>
+                                    <h4>CÔNG TY CỔ PHẦN KHO AN AN</h4>
                                     <p>Số 97 Man Thiện, P. Tăng Nhơn Phú A, Tp. Thủ Đức</p>
                                 </div>
                                 <div>
@@ -102,13 +125,12 @@ const AddImportRequestModal = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
                             <div className='text-center mt-10'>
-                                <h2 className='text-xl font-bold'>PHIẾU YÊU CẦU NHẬP HÀNG</h2>
-                                <p className='italic font-bold'>Ngày...tháng...năm...</p>
-                                <p>Số: NK00012</p>
+                                <h2 className='text-xl font-bold mb-5'>PHIẾU ĐỀ NGHỊ NHẬP HÀNG</h2>
+
                             </div>
-                            <div className="space-y-4 mr-5">
+                            <div className="space-y-4 mr-5 ml-5">
                                 <div className="flex items-center">
-                                    <p className="w-1/5">Người đề xuất:</p>
+                                    <p className="w-1/5">Người đề nghị xuất:</p>
                                     <input
                                         type="text"
                                         value={data.createBy}
@@ -124,33 +146,36 @@ const AddImportRequestModal = ({ isOpen, onClose }) => {
                                         type="text"
                                         value={data.phoneNumber}
                                         onChange={(e) => handleFormChange('phoneNumber', e.target.value)}
-                                        placeholder="Nhập tên người đề xuất"
+                                        placeholder="Nhập số điện thoại"
                                         className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
+
 
                                 <div className="flex items-center">
                                     <p className="w-1/5">Chức danh:</p>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={data.position}
                                         onChange={(e) => handleFormChange('position', e.target.value)}
-                                        placeholder="Nhập chức danh"
                                         className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                    >
+                                        <option value="" disabled>Chọn chức danh</option>
+                                        <option value="Thủ Kho">Thủ kho</option>
+                                        <option value="Nhân viên phòng kinh doanh">Nhân viên phòng kinh doanh</option>
+                                    </select>
                                 </div>
-
-
 
                                 <div className="flex items-center">
                                     <p className="w-1/5">Bộ phận:</p>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={data.department}
                                         onChange={(e) => handleFormChange('department', e.target.value)}
-                                        placeholder="Nhập bộ phận"
                                         className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                    >
+                                        <option value="" disabled>Chọn bộ phận</option>
+                                        <option value="Kho">Kho</option>
+                                        <option value="Phòng kinh doanh">Phòng kinh doanh</option>
+                                    </select>
                                 </div>
 
                                 <div className="flex items-center">
@@ -233,36 +258,19 @@ const AddImportRequestModal = ({ isOpen, onClose }) => {
                                 </tbody>
                             </table>
 
-                            <div className="mb-4">
-                                <p className="font-bold">Tổng tiền: {data.totalValue.toLocaleString()} VND</p>
-                            </div>
-
                             <div className="flex justify-center mb-5">
                                 <IconButton onClick={handleAddRow} color="primary">
                                     <AddIcon />
                                 </IconButton>
                             </div>
-                            <div className="flex justify-between mb-20">
-                                <div>
-                                    <p className='font-bold'>Đại diện BGD</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Kế toán trưởng</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Thủ kho</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Người lập phiếu</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
+
+                            <div className="mb-4">
+                                <p className="font-bold">Tổng tiền: {data.totalValue.toLocaleString()} VND</p>
                             </div>
+
                         </div>
 
-                        <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+                        <div className="flex items-center justify-end p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
                             <button
                                 type="submit"
                                 className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -277,9 +285,19 @@ const AddImportRequestModal = ({ isOpen, onClose }) => {
                                 Hủy
                             </button>
                         </div>
+
                     </form>
                 </div>
             </div>
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+            >
+                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Dialog>
     );
 };
@@ -294,10 +312,9 @@ const ImportRequest = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedTransactionRequest, setSelectedTransactionRequest] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-
-
-
-    console.log("Dữ liệu truyền đi  ", selectedTransactionRequest)
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize] = useState(5);
+    const role = localStorage.getItem("role")
 
     const handleEditButtonClick = (request) => {
         setSelectedTransactionRequest(request);
@@ -306,24 +323,26 @@ const ImportRequest = () => {
 
     const dispatch = useDispatch();
     const type = "Nhập"
+
     useEffect(() => {
         dispatch(getAllTransactionRequest(type));
     }, [dispatch]);
 
-    
+    console.log("Danh sách phiếu yêu cầu nhập ", transactionRequests)
+
     const filteredTransactionsRequest = transactionRequests.filter(transactionRequest => {
         const transactionRequestId = String(transactionRequest?.transactionRequestId || '').toLowerCase();
         const transactionDate = new Date(transactionRequest.createAt);
-        const createBy = transactionRequest.createBy.toLowerCase() || ''; 
-        const status = transactionRequest.status.toLowerCase() || ''; 
-        const updatedBy = transactionRequest?.staff.staffName.toLowerCase() || ''; 
+        const createBy = transactionRequest.createBy.toLowerCase() || '';
+        const status = transactionRequest.status.toLowerCase() || '';
+        const updatedBy = transactionRequest?.staffUpdate?.staffName.toLowerCase() || '';
 
-    
+
         return (
             (!startDate || transactionDate >= startDate) &&
             (!endDate || transactionDate <= endDate) &&
             (!searchTerm ||
-                createBy.includes(searchTerm.toLowerCase()) || 
+                createBy.includes(searchTerm.toLowerCase()) ||
                 status.includes(searchTerm.toLowerCase()) ||
                 transactionRequestId.includes(searchTerm.toLowerCase()) ||
                 updatedBy.includes(searchTerm.toLowerCase())
@@ -332,10 +351,30 @@ const ImportRequest = () => {
         );
     });
 
+    const paginatedTransactions = filteredTransactionsRequest.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    )
+    const handlePageChange = (event, value) => {
+        setCurrentPage(value);
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString || isNaN(new Date(dateString))) return 'N/A';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
+    const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+
+
     return (
         <div>
             <div className='bg-white m-3'>
-                <div className='font-bold text-3xl p-3 ml-5'>Quản lý phiếu yêu cầu nhập</div>
+                <div className='font-bold text-3xl p-3 ml-5'>Quản lý phiếu đề nghị nhập</div>
 
                 <div className="mr-5 p-5 flex justify-between items-center" style={{ float: 'right', width: '100%' }}>
                     <div className="flex items-center pl-5">
@@ -353,12 +392,12 @@ const ImportRequest = () => {
                                     selectsStart
                                     startDate={startDate}
                                     endDate={endDate}
-                                    placeholderText="Select date start"
+                                    placeholderText="Ngày bắt đầu"
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 />
                             </div>
 
-                            <span className="mx-4 text-gray-500">to</span>
+                            <span className="mx-4 text-gray-500">đến</span>
                             <div className="relative">
                                 <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-10">
                                     <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
@@ -371,7 +410,7 @@ const ImportRequest = () => {
                                     selectsEnd
                                     startDate={startDate}
                                     endDate={endDate}
-                                    placeholderText="Select date end"
+                                    placeholderText="Ngày kết thúc"
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 />
 
@@ -401,16 +440,22 @@ const ImportRequest = () => {
                                 type="text"
                                 id="table-search-users"
                                 className="block pt-2.5 pb-2.5 items-center ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                placeholder="Tìm kiếm phiếu yêu cầu nhập"
-                                onChange={(e) => setSearchTerm(e.target.value)} 
+                                placeholder="Tìm kiếm phiếu đề nghị nhập"
+                                onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <div className="ml-2">
-                            <button className="bg-indigo-600 text-white p-2 rounded-md flex items-center" onClick={() => setIsAddModalOpen(true)}>
-                                <LuPlus />
-                                <p className="pl-1">Thêm</p>
-                            </button>
-                        </div>
+                        {role !== 'Admin' && (
+                            <div className="ml-2">
+                                <button
+                                    className="bg-indigo-600 text-white p-2 rounded-md flex items-center"
+                                    onClick={() => setIsAddModalOpen(true)}
+                                >
+                                    <LuPlus />
+                                    <p className="pl-1">Thêm</p>
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 </div>
 
@@ -446,7 +491,7 @@ const ImportRequest = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredTransactionsRequest.map((request, index) => (
+                            {paginatedTransactions.map((request, index) => (
                                 <tr
                                     key={request.id}
                                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
@@ -455,14 +500,14 @@ const ImportRequest = () => {
                                         scope="row"
                                         className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                                     >
-                                        {index + 1}
+                                        {(currentPage - 1) * pageSize + index + 1}
                                     </th>
-                                    <td className="px-6 py-4">{request.transactionRequestId}</td>
-                                    <td className="px-6 py-4">{request.totalValue}</td>
+                                    <td className="px-6 py-4">{request.transactionRequestCode}</td>
+                                    <td className="px-6 py-4">{formatCurrency(request.totalValue)}</td>
                                     <td className="px-6 py-4">{request.status}</td>
-                                    <td className="px-6 py-4">{request.createAt}</td>
+                                    <td className="px-6 py-4">{formatDate(request.createAt)}</td>
                                     <td className="px-6 py-4">{request.createBy}</td>
-                                    <td className="px-6 py-4">{request.staff.staffName}</td>
+                                    <td className="px-6 py-4">{request.staffUpdate?.staffName || ''}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex">
                                             <div className="mr-1">
@@ -483,24 +528,6 @@ const ImportRequest = () => {
                                                     </svg>
                                                 </button>
                                             </div>
-                                            <div>
-                                                <button className="flex p-1 bg-red-500 rounded-xl hover:rounded-3xl hover:bg-red-600 transition-all duration-300 text-white">
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        className="h-6 w-6"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M6 18L18 6M6 6l12 12"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -509,17 +536,34 @@ const ImportRequest = () => {
 
                     </table>
                 </div>
-
+                <div className="flex justify-center fixed bottom-0 left-0 w-full bg-white shadow-md">
+                    <Stack spacing={2}>
+                        <Pagination
+                            count={Math.ceil(filteredTransactionsRequest.length / pageSize)}
+                            page={currentPage}
+                            onChange={handlePageChange}
+                            shape="rounded"
+                        />
+                    </Stack>
+                </div>
             </div>
             <AddImportRequestModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
+                onClose={() => {
+                    setIsAddModalOpen(false)
+                    dispatch(getAllTransactionRequest("Nhập"))
+                }}
+                onSuccess={() => dispatch(getAllTransactionRequest("Nhập"))}
             />
 
             <EditTransactionRequest
                 isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
+                onClose={() => {
+                    setIsEditModalOpen(false)
+                    dispatch(getAllTransactionRequest("Nhập"));
+                }}
                 transactionRequest={selectedTransactionRequest}
+                onSuccess={() => dispatch(getAllTransactionRequest("Nhập"))}
             />
         </div>
     )

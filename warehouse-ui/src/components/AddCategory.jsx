@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Dialog } from '@mui/material';
+import { Dialog, Snackbar, Alert } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { addCategory, getAllCategories } from '../State/Category/Action';
-
 
 const AddCategory = ({ isOpen, onClose }) => {
     const dispatch = useDispatch();
     const [categoryName, setCategoryName] = useState('');
     const [description, setDescription] = useState('');
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,13 +19,43 @@ const AddCategory = ({ isOpen, onClose }) => {
         try {
             dispatch(addCategory(categoryData));
             dispatch(getAllCategories());
+            setSnackbar({
+                open: true,
+                message: 'Thêm thể loại thành công!',
+                severity: 'success',
+            });
+            setCategoryName('');
+            setDescription('');
+            onClose(); 
         } catch (error) {
             console.error('Failed to add category:', error);
+            setSnackbar({
+                open: true,
+                message: 'Thêm thể loại thất bại. Vui lòng thử lại.',
+                severity: 'error',
+            });
         }
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbar({ ...snackbar, open: false });
     };
 
     return (
         <div>
+            {/* Snackbar */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+
+            {/* Modal */}
             <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
                 <div id="editCategoryModal" tabIndex="-1" aria-hidden="true" className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
                     <div className="relative w-full max-w-2xl max-h-full">

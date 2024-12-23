@@ -18,6 +18,9 @@ import FirebaseImageUpload from '../components/FirebaseImageUpload';
 import Staff from '../pages/Staff';
 import PrivateRoute from '../components/PrivateRoute';
 import NotFound from '../pages/NotFound';
+import InventoryReport from '../pages/InventoryReport';
+import ForgotPassword from '../pages/ForgotPassword';
+import Author from '../pages/Author';
 
 const AppRoutes = () => {
   const token = localStorage.getItem('token');
@@ -26,11 +29,12 @@ const AppRoutes = () => {
       <Routes>
         <Route
           path='/'
-          element={token ? <Layout /> : <Navigate to='/login' replace />}
-        >
+          element={<Layout/>}>
+        
           <Route index element={<Home />} />
           <Route path='books' element={<Books />} />
           <Route path='category' element={<Category />} />
+          <Route path='authors' element={<Author />} />
           <Route path='import-slip' element={<Import />} />
           <Route path='import-request' element={<ImportRequest />} />
           <Route path='export' element={<Export />} />
@@ -40,6 +44,7 @@ const AppRoutes = () => {
           <Route path='report' element={<Report />} />
           <Route path='suppliers' element={<Supplier />} />
           <Route path='profile' element={<UserProfileCard />} />
+          <Route path='inventory-report' element={<InventoryReport/>} />
           <Route path='not-found' element={<NotFound />} />
           <Route path="/admin" element={<PrivateRoute />}>
             <Route path="staffs" element={<Staff />} />
@@ -49,7 +54,9 @@ const AppRoutes = () => {
 
         </Route>
         <Route path='login' element={<Login />} />
-        <Route path='*' element={<Navigate to='/login' replace />} />
+        <Route path='forgot-password' element={<ForgotPassword />} />
+
+        <Route path='*' element={<Navigate to='/not-found' replace />} />
       </Routes>
     </div>
   );

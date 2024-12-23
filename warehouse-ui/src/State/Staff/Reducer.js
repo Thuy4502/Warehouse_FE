@@ -11,6 +11,9 @@ import {
   CHANGE_PASSWORD_REQUEST,
   CHANGE_PASSWORD_SUCCESS,
   CHANGE_PASSWORD_FAILURE,
+  CHANGE_STAFF_STATUS_REQUEST,
+  CHANGE_STAFF_STATUS_SUCCESS,
+  CHANGE_STAFF_STATUS_FAILURE,
 } from './ActionType';
 
 const initialState = {
@@ -26,6 +29,7 @@ export const staffReducer = (state = initialState, action) => {
     case ADD_STAFF_REQUEST:
     case UPDATE_PROFILE_REQUEST:
     case CHANGE_PASSWORD_REQUEST:
+    case CHANGE_STAFF_STATUS_REQUEST:
       return {
         ...state,
         loading: true,
@@ -43,6 +47,7 @@ export const staffReducer = (state = initialState, action) => {
     case ADD_STAFF_FAILURE:
     case UPDATE_PROFILE_FAILURE:
     case CHANGE_PASSWORD_FAILURE:
+    case CHANGE_STAFF_STATUS_FAILURE:
       return {
         ...state,
         loading: false,
@@ -60,9 +65,6 @@ export const staffReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        // staffs: state.staffs.map(staff =>
-        //   staff.id === action.payload.id ? action.payload : staff
-        // ),
         staff: action.payload,
       };
 
@@ -70,6 +72,17 @@ export const staffReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+    };
+
+    case CHANGE_STAFF_STATUS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        staffs: state.staffs.map((staff) =>
+          staff.id === action.payload.id
+            ? { ...staff, status: action.payload.status }
+            : staff
+        ),
       };
 
     default:

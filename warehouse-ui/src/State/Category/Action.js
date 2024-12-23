@@ -32,7 +32,7 @@ export const addCategory = (category) => async (dispatch) => {
     try {
         dispatch({ type: CREATE_CATEGORY_REQUEST });
 
-        const { data } = await axios.post(`${API_BASE_URL}/admin/category/add`, category, {
+        const { data } = await axios.post(`${API_BASE_URL}/warehouse_keeper/category/add`, category, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -43,8 +43,10 @@ export const addCategory = (category) => async (dispatch) => {
             payload: data,
         });
     } catch (error) {
-        console.error('Error creating categories:', error.response ? error.response.data : error.message);
-        dispatch({ type: CREATE_CATEGORY_FAILURE, payload: error.message });
+        const errorMessage = error.response ? error.response.data : error.message;
+        console.error('Error creating categories:', errorMessage);
+
+        dispatch({ type: CREATE_CATEGORY_FAILURE, payload: errorMessage });
     }
 };
 
@@ -54,7 +56,7 @@ export const updateCategory = (id, category) => async (dispatch) => {
     try {
         dispatch({ type: UPDATE_CATEGORY_REQUEST });
 
-        const { data } = await axios.put(`${API_BASE_URL}/admin/category/update/${id}`, category, {
+        const { data } = await axios.put(`${API_BASE_URL}/warehouse_keeper/category/update/${id}`, category, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }

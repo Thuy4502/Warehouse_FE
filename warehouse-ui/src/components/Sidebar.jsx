@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { TbHome, TbFileImport, TbReport, TbPackageImport, TbUsers } from "react-icons/tb";
+import { TbHome, TbFileImport, TbReport, TbPackageImport, TbUsers, TbUserEdit} from "react-icons/tb";
 import { AiOutlineProduct } from "react-icons/ai";
 import { Link, useNavigate } from 'react-router-dom';
 import { PiExportBold, PiBookBold, PiWarehouse, PiCaretDownBold, PiCaretUpBold, PiUserCircle } from "react-icons/pi";
@@ -43,24 +43,29 @@ const Sidebar = () => {
     { id: 1, path: "/", name: "Dashboard", icon: TbHome },
     { id: 2, path: "/category", name: "Thể loại sách", icon: AiOutlineProduct },
     { id: 3, path: "/books", name: "Sách", icon: PiBookBold },
+    { id: 4, path: "/authors", name: "Tác giả", icon: TbUserEdit },
+
     ...(role !== "Salesperson" ? [{
-      id: 4, path: "/import", name: "Nhập hàng", icon: TbFileImport,
+      id: 5, path: "/import", name: "Nhập hàng", icon: TbFileImport,
       submenu: true,
       submenuItems: [
-        { title: "Phiếu yêu cầu", path: "/import-request" },
+        { title: "Phiếu đề nghị", path: "/import-request" },
         { title: "Phiếu nhập", path: "/import-slip" }
       ]
     }] : []),
     {
-      id: 5, path: "/export", name: "Xuất hàng", icon: TbPackageImport,
+      id: 6, path: "/export", name: "Xuất hàng", icon: TbPackageImport,
       submenu: true,
       submenuItems: [
-        { title: "Phiếu yêu cầu", path: "/export-request" },
-        { title: "Phiếu xuất", path: "/export" }
+        { title: "Phiếu đề nghị", path: "/export-request" },
+        ...((role !== "Salesperson") ? [
+          { title: "Phiếu xuất", path: "/export" },
+        ] : []),
+        
       ]
     },
     {
-      id: 6, 
+      id: 7, 
       path: "/report", 
       name: "Báo cáo", 
       icon: TbReport,
@@ -68,13 +73,15 @@ const Sidebar = () => {
       submenuItems: [
         { title: "Nhật ký nhập", path: "/import-report" },
         { title: "Nhật ký xuất", path: "/export-report" },
-        { title: "Nhật ký nhập xuất", path: "/report" }
+        { title: "Nhật ký nhập xuất", path: "/report" },
+        { title: "Báo cáo tồn kho", path: "/inventory-report" }
+
       ]
     },
     
-    { id: 7, path: "/suppliers", name: "Nhà cung cấp", icon: BiPurchaseTagAlt },
-    ...((role === "Admin" || role === "Warehousekeeper") ? [
-      { id: 8, path: "/admin/staffs", name: "Nhân viên", icon: TbUsers },
+    { id: 8, path: "/suppliers", name: "Nhà cung cấp", icon: BiPurchaseTagAlt },
+    ...((role === "Admin") ? [
+      { id: 9, path: "/admin/staffs", name: "Nhân viên", icon: TbUsers },
     ] : []),
   
   ];
@@ -98,7 +105,7 @@ const Sidebar = () => {
                 className='flex justify-between items-center cursor-pointer md:space-x-5'
                 onClick={() => handleLinkClick(index, link.submenu, link.path)}
               >
-                <div className='flex justify-center md:justify-start items-center space-x-5'>
+                <div id='btn-sidebar' className='flex justify-center md:justify-start items-center space-x-5'>
                   <span>{React.createElement(link.icon)}</span>
                   <span className='text-sm text-gray-500 hidden md:flex'>{link.name}</span>
                 </div>

@@ -8,11 +8,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { getAllBooks } from '../State/Book/Action';
 
 
-const EditTransaction = ({ isOpen, onClose, transaction }) => {
+const EditTransaction = ({ isOpen, onClose, transaction, onSuccess }) => {
     const books = useSelector((state) => state.book.books.data || []);
     const dispatch = useDispatch();
     const staff = localStorage.getItem("staffId")
-    const [rows, setRows] = useState([{ id: 1, bookId: '', requestQuantity: '', actualQuantity: '', price: '', note: '' }]);
+    const [rows, setRows] = useState([{ transactionItemId: '', id: 1, bookId: '', requestQuantity: '', actualQuantity: '', price: '', note: '' }]);
 
     const handleAddRow = () => {
         const newRow = { id: rows.length + 1, bookId: '', requestQuantity: '', actualQuantity: '', price: '', note: '' };
@@ -24,30 +24,33 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
     };
 
     const handleRowChange = (index, field, value) => {
-        const updatedRows = [...rows];
-        updatedRows[index][field] = value;
+        const updatedRows = rows.map((row, idx) =>
+            idx === index ? { ...row, [field]: value } : row
+        );
+
         setRows(updatedRows);
 
         const updatedTransactionItems = updatedRows.map((row) => ({
-            bookId: row.bookId,
-            requestQuantity: row.requestQuantity,
-            actualQuantity: row.actualQuantity,
-            price: row.price,
-            note: row.note,
+            transactionItemId: row.transactionItemId,
+            bookId: row.bookId || '',
+            requestQuantity: parseFloat(row.requestQuantity) || 0,
+            actualQuantity: parseFloat(row.actualQuantity) || 0,
+            price: parseFloat(row.price) || 0,
+            note: row.note || '',
         }));
 
-        const totalValue = updatedTransactionItems.reduce((acc, row) => {
-            const actualQuantity = parseFloat(row.actualQuantity) || 0;
-            const price = parseFloat(row.price) || 0;
-            return acc + actualQuantity * price;
-        }, 0);
+        const totalValue = updatedTransactionItems.reduce(
+            (acc, item) => acc + item.actualQuantity * item.price,
+            0
+        );
 
         setData((prevData) => ({
             ...prevData,
             transactionItems: updatedTransactionItems,
-            totalValue: totalValue,
+            totalValue,
         }));
     };
+
     const handleDeleteRow = (index) => {
         const updatedRows = rows.filter((_, i) => i !== index);
         setRows(updatedRows);
@@ -60,20 +63,41 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
         billCode: transaction?.bill?.billCode || '',
         transactionCode: transaction?.transactionCode || '',
         transactionRequestId: transaction?.transactionRequest?.transactionRequestId || '',
+        transactionRequestCode: transaction?.transactionRequest?.transactionRequestCode || '',
         transactionItems: rows || [],
         staffId: transaction?.staff?.staffId || '',
         updateBy: staff,
-        typeId: transaction?.type.typeId || '',
+        type: transaction?.type.typeName || '',
         totalValue: transaction?.totalValue || 0,
 
     })
 
 
-    const handleSave = (event) => {
+    const handleSave = async (event) => {
         event.preventDefault();
-        dispatch(updateTransaction(transaction?.transactionId, data));
+   
+        const updatedTransactionItems = rows.map((row) => ({
+            transactionItemId: row.transactionItemId,
+            bookId: row.bookId || '',
+            requestQuantity: parseFloat(row.requestQuantity) || 0,
+            actualQuantity: parseFloat(row.actualQuantity) || 0,
+            price: parseFloat(row.price) || 0,
+            note: row.note || '',
+        }));
+   
+        const updatedData = {
+            ...data,
+            transactionItems: updatedTransactionItems,
+        };
+   
+        try {
+            await dispatch(updateTransaction(transaction?.transactionId, updatedData));
+            onClose();
+        } catch (error) {
+            console.error('Error updating transaction:', error);
+        }
     };
-
+   
     useEffect(() => {
         dispatch(getAllBooks());
     }, [dispatch]);
@@ -82,6 +106,7 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
         if (transaction && transaction.transactionItems) {
             const formattedRows = transaction.transactionItems.map((item, index) => ({
                 id: index + 1,
+                transactionItemId: item.transactionItemId || '',
                 bookId: item.book?.bookId || '',
                 requestQuantity: item.requestQuantity || '',
                 actualQuantity: item.actualQuantity || '',
@@ -92,26 +117,29 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
             setRows(formattedRows);
 
             setData({
+                deliveryPerson: transaction.deliveryPerson || '',
                 businessPartner: transaction.businessPartner || '',
                 address: transaction.address || '',
                 phone_number: transaction.phone_number || '',
                 billCode: transaction.bill?.billCode || '',
                 transactionCode: transaction.transactionCode || '',
                 transactionRequestId: transaction.transactionRequest?.transactionRequestId || '',
+                transactionRequestCode: transaction?.transactionRequest?.transactionRequestCode || '',
                 transactionItems: formattedRows,
                 staffId: transaction.staff?.staffId || '',
-                typeId: transaction.type?.typeId || '',
+                type: transaction.type?.typeName || '',
                 updateBy: staff,
                 totalValue: transaction.totalValue || 0,
             });
         }
     }, [transaction, staff]);
 
-
-
     const handleFormChange = (field, value) => {
         setData({ ...data, [field]: value });
     };
+
+    const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+
 
     return (
         <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
@@ -136,13 +164,15 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
                                 </div>
                             </div>
                             <div className='text-center mt-10'>
-                                <h2 className='text-xl font-bold'>PHIẾU NHẬP KHO</h2>
-                                <p className='italic font-bold'>Ngày...tháng...năm...</p>
+                                {transaction?.type.typeName === 'Nhập' && (<h2 className='text-xl font-bold'>PHIẾU NHẬP KHO</h2>)}
+                                {transaction?.type.typeName === 'Xuất' && (<h2 className='text-xl font-bold'>PHIẾU XUẤT KHO</h2>)}
+
+                                {/* <p className='italic font-bold'>Ngày...tháng...năm...</p> */}
                                 <span className='flex justify-center items-center'>
                                     <p className='mr-2'>Số: </p>
                                     <input
                                         type="text"
-                                        value={data.transactionCode}
+                                        value={data?.transactionCode}
                                         onChange={(e) => handleFormChange('transactionCode', e.target.value)}
                                         placeholder="Nhập số PN"
                                         className="w-[100px] py-2   "
@@ -150,6 +180,7 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
                                 </span>
                             </div>
                             <div className="space-y-4 mr-5">
+
                                 <div className="flex items-center">
                                     <p className="w-1/5">{transaction?.type.typeName == 'Xuất' ? "Tên khách hàng: " : 'Nhà cung cấp: '}</p>
                                     <input
@@ -160,6 +191,7 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
                                         className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
+
 
                                 {transaction?.type.typeName === 'Nhập' && (
                                     <div className="flex items-center">
@@ -173,9 +205,6 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
                                         />
                                     </div>
                                 )}
-
-
-
 
                                 <div className="flex items-center">
                                     <p className="w-1/5">Địa chỉ:</p>
@@ -192,8 +221,8 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
                                     <p className="w-1/5">Theo phiếu yêu cầu số:</p>
                                     <input
                                         type="text"
-                                        value={data.transactionRequestId}
-                                        onChange={(e) => handleFormChange('transactionRequestId', e.target.value)}
+                                        value={data?.transactionRequestCode || ''}
+                                        onChange={(e) => handleFormChange('transactionRequestCode', e.target.value)}
                                         placeholder="Nhập số phiếu yêu cầu"
                                         className="w-4/5 rounded py-2 px-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
@@ -285,39 +314,20 @@ const EditTransaction = ({ isOpen, onClose, transaction }) => {
                                 </tbody>
                             </table>
 
-                            <div className="mb-4">
-                                <p className="font-bold">
-                                    Tổng tiền: {Number(data.totalValue).toLocaleString()} VND
-                                </p>
-                            </div>
-
-
                             <div className="flex justify-center mb-5">
                                 <IconButton onClick={handleAddRow} color="primary">
                                     <AddIcon />
                                 </IconButton>
                             </div>
-                            <div className="flex justify-between mb-20">
-                                <div>
-                                    <p className='font-bold'>Người lập phiếu</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Người giao hàng</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Thủ kho</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
-                                <div>
-                                    <p className='font-bold'>Kế toán trưởng</p>
-                                    <p className='italic text-center'>Ký họ tên</p>
-                                </div>
+
+                            <div className="mb-4">
+                                <p className="font-bold">
+                                    Tổng tiền: {formatCurrency(data.totalValue)}
+                                </p>
                             </div>
                         </div>
 
-                        <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+                        <div className="flex justify-end items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
                             <button
                                 type="submit"
                                 className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"

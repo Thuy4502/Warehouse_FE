@@ -4,18 +4,21 @@ import { getAllCategories } from '../State/Category/Action';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllAuthors } from '../State/Author/Action';
 import { getAllPublisher } from '../State/Publisher/Action';
-import { Checkbox, FormControl, MenuItem, Select } from '@mui/material';
+import { Checkbox, FormControl, MenuItem, Select, Snackbar, Alert } from '@mui/material';
 import { uploadImageToFirebase } from '../config/FirebaseConfig';
-import { addBook } from '../State/Book/Action';
+import { addBook, getAllBooks } from '../State/Book/Action';
 import UploadExcelFile from './UploadExcelFile';
 
-const AddBook = ({ closeModal }) => {
+const AddBook = ({ closeModal, onSuccess}) => {
     const defaultImage = 'https://www.shutterstock.com/image-vector/image-icon-600nw-211642900.jpg';
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(defaultImage);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
     const dispatch = useDispatch();
 
@@ -41,14 +44,25 @@ const AddBook = ({ closeModal }) => {
         bookName: '',
         title: '',
         price: '',
+        isbn: '',
         quantity: '',
         publicationYear: '',
         image: defaultImage,
-        authorId: [],
-        categoryId: '',
+        authorIds: [],
+        categoryIds: [],
         language: '',
         publisherId: '',
+        edition: '',
+        numberOfPage: ''
     });
+
+    const handleCategoryChange = (event) => {
+        const { value } = event.target;
+        setBookData((prevState) => ({
+            ...prevState,
+            categoryIds: value,
+        }));
+    };
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -65,15 +79,11 @@ const AddBook = ({ closeModal }) => {
 
     const handleAuthorChange = (event) => {
         const value = event.target.value;
-        setBookData((prevData) => ({ ...prevData, authorId: value }));
+        setBookData((prevData) => ({ ...prevData, authorIds: value }));
     };
 
     const handlePublisherChange = (event) => {
         setBookData((prevData) => ({ ...prevData, publisherId: event.target.value }));
-    };
-
-    const handleCategoryChange = (event) => {
-        setBookData((prevData) => ({ ...prevData, categoryId: event.target.value }));
     };
 
     const handleLanguageChange = (event) => {
@@ -88,32 +98,44 @@ const AddBook = ({ closeModal }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setSuccessMessage(null);
+        setError(null);
 
         try {
             let imageUrl = '';
-            console.log("SelectedF File", selectedFile);
+            console.log("Selected File", selectedFile);
 
             if (selectedFile) {
                 imageUrl = await uploadImageToFirebase(selectedFile);
                 console.log("Uploaded image URL:", imageUrl);
-                bookData.image = imageUrl
+                bookData.image = imageUrl;
             } else {
                 console.log("No selected file for upload.");
             }
 
-            dispatch(addBook(bookData));
-            closeModal
+            await dispatch(addBook(bookData));
+            setSuccessMessage("Sách đã được thêm thành công!");
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+            onSuccess();
+            closeModal();
 
         } catch (error) {
-            console.error("Error creating product:", error);
-            setError('Error creating product. Please try again.');
+            console.error("Error creating book:", error);
+            setError('Error creating book. Please try again.');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
         } finally {
             setLoading(false);
         }
     };
-
+    
     const closeModalUpload = () => {
         setIsUploadModalOpen(false);
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbarOpen(false);
     };
 
 
@@ -185,7 +207,7 @@ const AddBook = ({ closeModal }) => {
                                     <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
                                         <Select
                                             name="authorId"
-                                            value={bookData.authorId}
+                                            value={bookData.authorIds}
                                             onChange={handleAuthorChange}
                                             multiple
                                             sx={{
@@ -204,7 +226,7 @@ const AddBook = ({ closeModal }) => {
                                         >
                                             {AUTHORS.map((author) => (
                                                 <MenuItem key={author.authorId} value={author.authorId}>
-                                                    <Checkbox checked={bookData.authorId.indexOf(author.authorId) > -1} />
+                                                    <Checkbox checked={bookData.authorIds.indexOf(author.authorId) > -1} />
                                                     {author.authorName}
                                                 </MenuItem>
                                             ))}
@@ -239,6 +261,7 @@ const AddBook = ({ closeModal }) => {
                                     </FormControl>
                                 </div>
 
+
                                 <div className="col-span-6 sm:col-span-3">
                                     <label htmlFor="categoryId" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                         Thể loại sách
@@ -246,8 +269,9 @@ const AddBook = ({ closeModal }) => {
                                     <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
                                         <Select
                                             name="categoryId"
-                                            value={bookData.categoryId}
+                                            value={bookData.categoryIds}
                                             onChange={handleCategoryChange}
+                                            multiple
                                             sx={{
                                                 fontSize: '0.875rem',
                                                 padding: '10px 14px',
@@ -256,9 +280,15 @@ const AddBook = ({ closeModal }) => {
                                                 backgroundColor: 'rgb(249 250 251)',
                                                 border: '1px solid rgb(209 213 219)',
                                             }}
+                                            renderValue={(selected) =>
+                                                selected
+                                                    .map((id) => CATEGORYS.find((category) => category.categoryId === id)?.categoryName)
+                                                    .join(', ')
+                                            }
                                         >
                                             {CATEGORYS.map((category) => (
                                                 <MenuItem key={category.categoryId} value={category.categoryId}>
+                                                    <Checkbox checked={bookData.categoryIds.indexOf(category.categoryId) > -1} />
                                                     {category.categoryName}
                                                 </MenuItem>
                                             ))}
@@ -292,7 +322,21 @@ const AddBook = ({ closeModal }) => {
                                         </Select>
                                     </FormControl>
                                 </div>
-
+                                <div className="col-span-6 sm:col-span-3">
+                                    <label htmlFor="publicationYear" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        isbn
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="isbn"
+                                        id="isbn"
+                                        className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        value={bookData.isbn}
+                                        onChange={handleInputChange}
+                                        placeholder=""
+                                        required
+                                    />
+                                </div>
                                 <div className="col-span-6 sm:col-span-3">
                                     <label htmlFor="publicationYear" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                         Năm xuất bản
@@ -303,6 +347,21 @@ const AddBook = ({ closeModal }) => {
                                         id="publicationYear"
                                         className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                         value={bookData.yearPublished}
+                                        onChange={handleInputChange}
+                                        placeholder=""
+                                        required
+                                    />
+                                </div>
+                                <div className="col-span-6 sm:col-span-3">
+                                    <label htmlFor="numberOfPage" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Số trang
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="numberOfPage"
+                                        id="numberOfPage"
+                                        className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        value={bookData.numberOfPage}
                                         onChange={handleInputChange}
                                         placeholder=""
                                         required
@@ -372,8 +431,19 @@ const AddBook = ({ closeModal }) => {
                             </button>
                         </div>
                     </form>
+                    <Snackbar
+                        open={snackbarOpen}
+                        autoHideDuration={6000}
+                        onClose={handleCloseSnackbar}
+                    >
+                        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                            {successMessage || error}
+                        </Alert>
+                    </Snackbar>
                 </div>
+
             </div>
+
         </div>
 
 

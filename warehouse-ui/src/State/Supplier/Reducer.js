@@ -74,8 +74,9 @@ const supplierReducer = (state = initialState, action) => {
                 suppliers: state.suppliers.map(supplier =>
                     supplier.id === action.payload.id ? action.payload : supplier
                 ),
-                supplier: action.payload  // Cập nhật thông tin nhà cung cấp vừa cập nhật
+                supplier: action.payload  // Cập nhật thông tin của nhà cung cấp vừa chỉnh sửa
             };
+
         case UPDATE_SUPPLIER_FAILURE:
             return {
                 ...state,

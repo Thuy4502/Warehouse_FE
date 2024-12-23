@@ -6,8 +6,11 @@ import { getAllBooks, updateBook } from '../State/Book/Action';
 import { useDispatch, useSelector } from 'react-redux';
 import UploadExcelFile from '../components/UploadExcelFile';
 import CommonUtils from '../utils/CommonUtils';
-import { getAllStaff, updateStaff } from '../State/Staff/Action';
+import { changeStaffStatus, getAllStaff, updateStaff } from '../State/Staff/Action';
 import AddStaff from '../components/AddStaff';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
+
 
 const Staff = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,6 +22,8 @@ const Staff = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const role = localStorage.getItem("role");
   const { staffs } = useSelector((state) => state.staff);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(5);
 
   const dispatch = useDispatch();
 
@@ -74,7 +79,7 @@ const Staff = () => {
   const handleChangeStatus = async () => {
     if (selectedStaff) {
       try {
-        await dispatch(updateStaff(selectedStaff, { isEnable: statusToUpdate }));
+        await dispatch(changeStaffStatus(selectedStaff, { isEnable: statusToUpdate }));
         closeConfirmModal();
         dispatch(getAllStaff());
       } catch (error) {
@@ -98,8 +103,17 @@ const Staff = () => {
       String(staff.isEnable).includes(searchTerm)
     );
   });
-  
-  
+
+  const paginatedStaff = filteredStaffs?.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+
+
 
   return (
     <div className="relative m-3 overflow-x-auto shadow-md sm:rounded-lg">
@@ -122,13 +136,13 @@ const Staff = () => {
           </div>
           {(role === "Admin") && <div className='ml-2'>
             <button className='rounded-md border p-2 flex items-center bg-green-700 text-white' onClick={openUploadModel}>
-              <LuUpload className="mr-2" />Upload excel
+              <LuUpload className="mr-2" />Tải lên file excel
             </button>
-            <UploadExcelFile open={isUploadModalOpen} onClose={closeUploadModel} />
+            <AddStaff open={isUploadModalOpen} onClose={closeUploadModel} />
           </div>}
           <div className=''>
             <button className='rounded-md border ml-2 p-2 flex items-center bg-green-700 text-white' onClick={handleOnclickExport}>
-              <LuDownload className="mr-2" />Export excel
+              <LuDownload className="mr-2" />Xuất file excel
             </button>
           </div>
         </div>
@@ -149,8 +163,8 @@ const Staff = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredStaffs?.length > 0 ? (
-            filteredStaffs.map((staff, index) => (
+          {paginatedStaff?.length > 0 ? (
+            paginatedStaff?.map((staff, index) => (
               <tr
                 key={index}
                 className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -163,7 +177,7 @@ const Staff = () => {
                 <td className="px-6 py-4">{staff.account?.role.roleName}</td>
                 <td className="px-6 py-4">{staff?.staffName}</td>
                 <td className="px-6 py-4">{staff?.email}</td>
-                <td className="px-6 py-4">{staff?.phone_number}</td>
+                <td className="px-6 py-4">{staff?.phoneNumber}</td>
                 <td className="px-6 py-4">
                   <div className="flex justify-center items-center">
                     <div className={`h-2.5 w-2.5 rounded-full ${staff?.isEnable ? 'bg-green-500' : 'bg-red-500'} me-2`}></div>
@@ -174,9 +188,9 @@ const Staff = () => {
                   <button
                     type="button"
                     onClick={() => openConfirmModal(staff)}
-                    className="font-medium text-yellow-600 dark:text-yellow-500 hover:underline ml-4"
+                    className="font-medium text-yellow-600 dark:text-yellow-500 hover:underline ml-4 border rounded-md border-yellow-600 p-2"
                   >
-                    Change Status
+                    Thay đổi
                   </button>
                 </td>}
 
@@ -185,7 +199,7 @@ const Staff = () => {
           ) : (
             <tr>
               <td colSpan="9" className="px-6 py-4 text-center">
-                No staffs available
+                Không có nhân viên nào để hiển thị 
               </td>
             </tr>
           )}
@@ -198,27 +212,41 @@ const Staff = () => {
       {isConfirmModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div className="bg-white p-6 rounded-md shadow-md w-96">
-            <h3 className="text-lg font-semibold mb-4">Confirm Status Change</h3>
-            <p>Are you sure you want to change the status of this staff?</p>
+            <h3 className="text-lg font-semibold mb-4">Xác nhận thay đổi trạng thái nhân viên</h3>
+            <p>Bạn có chắc bạn muốn thay đổi thông tin của nhân viên này?</p>
             <div className="mt-6 flex justify-end">
               <button
                 onClick={closeConfirmModal}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-gray-800 mr-2"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 onClick={handleChangeStatus}
                 className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 text-white"
               >
-                Confirm
+                Đồng ý
               </button>
             </div>
           </div>
+          <div className='flex justify-center fixed bottom-0 left-0 w-full bg-white shadow-md'>
+
+          </div>
         </div>
       )}
+      <div className='flex justify-center fixed bottom-0 left-0 w-full bg-white shadow-md'>
+        <Stack spacing={2}>
+          <Pagination
+            count={Math.ceil(filteredStaffs?.length / pageSize)}
+            page={currentPage}
+            onChange={handlePageChange}
+            shape="rounded"
+          />
+        </Stack>
+      </div>
     </div>
   );
+
 };
 
 export default Staff;

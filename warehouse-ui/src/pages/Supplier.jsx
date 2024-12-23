@@ -15,7 +15,7 @@ const EditSupplierModal = ({ isOpen, onClose, supplierData }) => {
 
   useEffect(() => {
     if (isOpen && supplierData) {
-      setSupplierName(supplierData.supplierName || ''); 
+      setSupplierName(supplierData.supplierName || '');
       setPhoneNumber(supplierData.phoneNumber || '');
       setEmail(supplierData.email || '');
       setAddress(supplierData.address || '');
@@ -292,6 +292,8 @@ const Supplier = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const state = useSelector((state) => state.supplier);
   const suppliers = state.suppliers;
+  const userRole = localStorage.getItem("role");
+
 
   useEffect(() => {
     dispatch(getAllSupplier());
@@ -299,12 +301,13 @@ const Supplier = () => {
 
   const filteredSuppliers = suppliers?.data?.filter((supplier) => {
     return (
-      supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.phoneNumber.includes(searchTerm) ||
-      supplier.email.includes(searchTerm)
+      (supplier.supplierName && supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (supplier.address && supplier.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (supplier.phoneNumber && supplier.phoneNumber.includes(searchTerm)) ||
+      (supplier.email && supplier.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
+
 
   const openEditModal = (supplier) => {
     setCurrentSupplier(supplier);
@@ -313,6 +316,7 @@ const Supplier = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    dispatch(getAllSupplier());
     setCurrentSupplier(null);
   };
 
@@ -340,14 +344,14 @@ const Supplier = () => {
               />
             </svg>
           </div>
-          
+
           <input
             type="text"
             id="table-search-users"
             className="block pt-2 pb-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Tìm kiếm nhà cung cấp"
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="ml-2">
@@ -380,9 +384,9 @@ const Supplier = () => {
               <th scope="col" className="px-6 py-3">
                 Email
               </th>
-              <th scope="col" className="px-6 py-3">
+              {userRole === "Warehousekeeper" && (<th scope="col" className="px-6 py-3">
                 Quản lý
-              </th>
+              </th>)}
             </tr>
           </thead>
           <tbody>
@@ -402,11 +406,12 @@ const Supplier = () => {
                   <td className="px-6 py-4">{supplier.address}</td>
                   <td className="px-6 py-4">{supplier.phoneNumber}</td>
                   <td className="px-6 py-4">{supplier.email}</td>
-                  <td className="px-6 py-4">
+                  
+                  {userRole === "Warehousekeeper" && (<td className="px-6 py-4">
                     <div className="flex">
                       <div className="mr-1">
                         <button
-                          onClick={() => openEditModal(supplier)} // Open edit modal with the specific supplier
+                          onClick={() => openEditModal(supplier)}
                           className="flex p-1 bg-yellow-500 rounded-xl hover:rounded-3xl hover:bg-yellow-600 transition-all duration-300 text-white"
                         >
                           <svg
@@ -425,26 +430,9 @@ const Supplier = () => {
                           </svg>
                         </button>
                       </div>
-                      <div>
-                        <button className="flex p-1 bg-red-500 rounded-xl hover:rounded-3xl hover:bg-red-600 transition-all duration-300 text-white">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
+
                     </div>
-                  </td>
+                  </td>)}
                 </tr>
               ))
             ) : (

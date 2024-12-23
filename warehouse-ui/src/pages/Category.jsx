@@ -11,6 +11,7 @@ const Category = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const dispatch = useDispatch();
+    const role = localStorage.getItem("role");
 
     const categories = useSelector((state) => state.category.categories.data || []);
 
@@ -51,11 +52,11 @@ const Category = () => {
                 <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" className="px-6 py-3">ID</th>
+                            <th scope="col" className="px-6 py-3">STT</th>
                             <th scope="col" className="px-6 py-3">Thể loại sách</th>
                             <th scope="col" className="px-6 py-3">Mô tả</th>
                             <th scope="col" className="px-6 py-3">Ngày chỉnh sửa</th>
-                            <th scope="col" className="px-6 py-3">Chỉnh sửa</th>
+                            {role !== "Salesperson" && (<th scope="col" className="px-6 py-3">Chỉnh sửa</th>)}
                         </tr>
                     </thead>
                     <tbody>
@@ -64,17 +65,28 @@ const Category = () => {
                                 <td colSpan="5" className="text-center py-4">No categories found.</td>
                             </tr>
                         ) : (
-                            categories.map((category) => (
+                            categories.map((category, index) => (
                                 <tr key={category.categoryId} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{category.categoryId}</th>
+                                    <th
+                                        scope="row"
+                                        className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                                    >
+                                        {index + 1} 
+                                    </th>
                                     <td className="px-6 py-4">{category.categoryName}</td>
-                                    <td className="px-6 py-4">{category.description}</td>
+                                    <td
+                                        className="px-6 py-4 max-w-xs text-ellipsis overflow-hidden whitespace-nowrap"
+                                        title={category.description}
+                                    >
+                                        {category.description}
+                                    </td>
+
                                     <td className="px-6 py-4">
-                                        {category.updateAt && !isNaN(new Date(category.updateAt)) ? new Date(category.updateAt).toLocaleDateString() : 'N/A'}
+                                        {category.updateAt && !isNaN(new Date(category.updateAt)) ? new Date(category.updateAt).toLocaleDateString() : ''}
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <button onClick={() => handleEditClick(category)} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</button>
-                                    </td>
+                                    {role !== "Salesperson" && (<td className="px-6 py-4 text-center">
+                                        <button onClick={() => handleEditClick(category)} className="font-medium flex justify-center text-blue-600 dark:text-blue-500 hover:underline">Chi tiết</button>
+                                    </td>)}
                                 </tr>
                             ))
                         )}

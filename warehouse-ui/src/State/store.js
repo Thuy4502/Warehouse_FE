@@ -10,6 +10,7 @@ import transactionReducer from "./Transaction/Reducer";
 import { staffReducer } from "./Staff/Reducer";
 import { statisticsReducer } from "./Statistic/Reducer";
 import supplierReducer from "./Supplier/Reducer";
+import inventoryReportReducer from "./Inventory/Reducer";
 
 const rootReducers = combineReducers({
     auth: authReducer,
@@ -22,6 +23,7 @@ const rootReducers = combineReducers({
     staff: staffReducer,
     statistic: statisticsReducer,
     supplier: supplierReducer,
+    inventory: inventoryReportReducer,
 });
 
 

@@ -8,10 +8,11 @@ export const addBook = (bookData) => async (dispatch) => {
     const token = localStorage.getItem("token");
     try {
         dispatch({type: ADD_BOOK_REQUEST});
-        const {data} = await axios.post(`${API_BASE_URL}/admin/book/add`, bookData, {
+        const {data} = await axios.post(`${API_BASE_URL}/warehouse_keeper/book/add`, bookData, {
             headers: {
                 "Authorization": `Bearer ${token}`
-            }
+            },
+            timeout: 5000,
         });
 
         console.log("Created product ", data);
@@ -29,9 +30,10 @@ export const addBook = (bookData) => async (dispatch) => {
 
 export const addBookByExcel = (bookData) => async (dispatch) => {
     const token = localStorage.getItem("token");
+    console.log("Data excel ", bookData);
     try {
         dispatch({type: ADD_BOOKS_BY_EXCEL_REQUEST});
-        const {data} = await axios.post(`${API_BASE_URL}/admin/book/addByExcel`, bookData, {
+        const {data} = await axios.post(`${API_BASE_URL}/warehouse_keeper/book/addByExcel`, bookData, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -81,7 +83,7 @@ export const updateBook = (id, bookData) => async (dispatch) => {
     try {
         dispatch({type: UPDATE_BOOK_REQUEST});
         
-        const { data } = await axios.put(`${API_BASE_URL}/admin/book/update/${id}`, bookData, {
+        const { data } = await axios.put(`${API_BASE_URL}/warehouse_keeper/book/update/${id}`, bookData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 'Content-Type': 'application/json',
@@ -89,11 +91,7 @@ export const updateBook = (id, bookData) => async (dispatch) => {
         });
     
         console.log("Update product ", data);
-    
-        dispatch({
-            type: UPDATE_BOOK_SUCCESS,
-            payload: data,
-        });
+        dispatch({ type: 'UPDATE_BOOK_SUCCESS', payload: response.data });
     } catch (error) {
         if (error.response) {
             console.error('Server responded with an error:', error.response.data);

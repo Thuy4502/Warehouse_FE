@@ -13,7 +13,10 @@ import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 
 const AddExportRequestModal = ({ isOpen, onClose, onSuccess }) => {
-    const books = useSelector((state) => state.book.books.data || []);
+    // const books = useSelector((state) => state.book.books.data || []);
+    const allBooks = useSelector((state) => state.book.books.data || []);
+    const books = allBooks.filter((book) => book.status !== 'INACTIVE');
+
     const dispatch = useDispatch();
     const staff = localStorage.getItem("staffId")
 

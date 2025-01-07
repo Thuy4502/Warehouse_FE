@@ -20,7 +20,9 @@ import Stack from '@mui/material/Stack';
 
 
 const AddExportModal = ({ isOpen, onClose, onSuccess }) => {
-  const books = useSelector((state) => state.book.books.data || []);
+  const allBooks = useSelector((state) => state.book.books.data || []);
+  const books = allBooks.filter((book) => book.status !== 'INACTIVE');
+
   const dispatch = useDispatch();
   const transactionRequests = useSelector((state) => state.transactionRequest.transactionRequests.data || []);
   const staff = localStorage.getItem("staffId")
@@ -32,6 +34,7 @@ const AddExportModal = ({ isOpen, onClose, onSuccess }) => {
   const [rows, setRows] = useState([{ id: 1, bookId: 0, requestQuantity: '', actualQuantity: '', price: '', note: '' }]);
   const errorMessage = useSelector((state) => state.transaction.error || null);
 
+  console.log("Sachsshhhh ", books);
 
   const [data, setData] = useState({
     businessPartner: '',
@@ -691,6 +694,7 @@ const Export = () => {
             {role === 'Warehousekeeper' && (
               <div className="ml-2">
                 <button
+                  id='btn-add-transaction'
                   className="bg-indigo-600 text-white p-2 rounded-md flex items-center"
                   onClick={() => setIsAddModalOpen(true)}
                 >
@@ -718,7 +722,7 @@ const Export = () => {
                   Phiếu yêu cầu xuất
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Nhà cung cấp
+                  Khách hàng
                 </th>
                 <th scope="col" className="px-6 py-3">
                   Ngày tạo

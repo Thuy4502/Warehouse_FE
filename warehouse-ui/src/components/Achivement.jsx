@@ -74,7 +74,7 @@ const Achievement = () => {
                             </div>
                             <div className="mx-5">
                                 <h4 className="text-2xl font-semibold text-gray-700">{formatCurrency(statisticList[0]?.totalImportValue)}</h4>
-                                <div className="text-gray-500">Doanh thu nhập</div>
+                                <div className="text-gray-500">Tổng tiền nhập</div>
                             </div>
                         </div>
                     </div>

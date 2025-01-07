@@ -20,7 +20,10 @@ import Stack from '@mui/material/Stack';
 
 const AddImportModal = ({ isOpen, onClose, onSuccess }) => {
   const dispatch = useDispatch();
-  const books = useSelector((state) => state.book.books.data || []);
+  // const books = useSelector((state) => state.book.books.data || []);
+    const allBooks = useSelector((state) => state.book.books.data || []);
+    const books = allBooks.filter((book) => book.status !== 'INACTIVE');
+  
   const suppliers = useSelector((state) => state.supplier.suppliers.data || []);
   const transactionRequests = useSelector((state) => state.transactionRequest.transactionRequests.data || []);
   const staff = localStorage.getItem("staffId");
@@ -717,6 +720,7 @@ const Import = () => {
             {role === 'Warehousekeeper' && (
               <div className="ml-2">
                 <button
+                  id='btn-add-transaction'
                   className="bg-indigo-600 text-white p-2 rounded-md flex items-center"
                   onClick={() => setIsAddModalOpen(true)}
                 >
